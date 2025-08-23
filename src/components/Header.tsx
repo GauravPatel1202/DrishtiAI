@@ -1,5 +1,6 @@
 // components/Header.tsx
 import React from 'react';
+import { Logo } from './logo';
 
 const Header: React.FC = () => {
   const toggleMenu = () => {
@@ -10,11 +11,7 @@ const Header: React.FC = () => {
   return (
     <header className="sticky top-0 left-0 right-0 z-50 backdrop-saturate-150 backdrop-blur-md bg-[rgba(11,13,16,0.85)] border-b border-[rgba(255,255,255,0.08)] animate-[fadeDown_0.7s_ease_forwards]">
       <div className="max-w-[1200px] mx-auto px-5 flex items-center justify-between gap-4 py-3.5">
-        <a href="#" className="flex items-center gap-3 font-extrabold">
-          <span className="w-9 h-9 rounded-lg grid place-items-center bg-conic-gradient from-[#7c5cff] to-[#00d1ff] animate-[rotate_6s_linear_infinite]"></span>
-          <span>LuminaAI (DrishtiAI)</span>
-        </a>
-
+        <Logo />
         {/* Hamburger icon for mobile */}
         <div className="hamburger" onClick={() => {
           const navlinks = document.querySelector('.navlinks');

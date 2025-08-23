@@ -15,6 +15,7 @@ import {
   Users
 } from 'lucide-react';
 import type { AIModel, ApiResponse, Message, SidebarProps } from '../lib/type';
+import { Logo } from '../components/logo';
 interface TopBarProps {
   models: AIModel[];
   onModelToggleSelect: (modelId: string) => void;
@@ -129,17 +130,6 @@ class ApiService {
     return results;
   }
 }
-
-// Logo Component
-const Logo: React.FC = () => (
-  <div className="flex items-center space-x-2">
-    <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center">
-      <MessageSquare className="w-5 h-5 text-white" />
-    </div>
-    <h1 className="text-xl font-bold">AI-WORLD</h1>
-  </div>
-);
-
 // New Chat Button Component
 const NewChatButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <button 
