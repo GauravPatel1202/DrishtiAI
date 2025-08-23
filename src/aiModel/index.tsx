@@ -1,0 +1,899 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  MessageSquare, 
+  Plus, 
+  Settings, 
+  Zap, 
+  Send,
+  Image,
+  Upload,
+  Mic,
+  User,
+  Bot,
+  Loader2,
+  Check,
+  Users
+} from 'lucide-react';
+
+// Types
+interface AIModel {
+  id: string;
+  name: string;
+  color: string;
+  enabled: boolean;
+  selected: boolean;
+}
+
+interface Message {
+  id: string;
+  content: string;
+  role: 'user' | 'assistant';
+  timestamp: Date;
+  model?: string;
+  isMultiResponse?: boolean;
+  responses?: ModelResponse[];
+}
+
+interface ModelResponse {
+  model: string;
+  content: string;
+  error?: string;
+  loading?: boolean;
+}
+
+interface ApiResponse {
+  response: string;
+  model?: string;
+  error?: string;
+}
+
+interface SidebarProps {
+  models: AIModel[];
+}
+
+interface TopBarProps {
+  models: AIModel[];
+  onModelToggleSelect: (modelId: string) => void;
+  onToggleModel: (modelId: string) => void;
+}
+
+interface ChatAreaProps {
+  messages: Message[];
+  isLoading: boolean;
+  selectedModels: string[];
+}
+
+interface InputAreaProps {
+  message: string;
+  onMessageChange: (message: string) => void;
+  onSendMessage: () => void;
+  isLoading: boolean;
+  selectedModels: string[];
+}
+
+// API Service
+class ApiService {
+  private baseUrl = 'http://localhost:3001/api/queries';
+
+  async sendQuery(query: string, model: string): Promise<ApiResponse> {
+    const providerMapping: { [key: string]: string } = {
+      'chatgpt': 'openai',
+      'gemini': 'gemini',
+      'deepseek': 'deepseek',
+      'perplexity': 'mistral',
+    };
+
+    const provider = providerMapping[model] || 'openai';
+    
+    const requestPayload = {
+      prompt: query,
+      providers: [provider]
+    };
+
+    console.log(`🚀 Sending API request to ${model}:`, {
+      url: `${this.baseUrl}/query`,
+      method: 'POST',
+      payload: requestPayload,
+      selectedModel: model,
+      mappedProvider: provider
+    });
+
+    try {
+      const response = await fetch(`${this.baseUrl}/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(requestPayload),
+      });
+
+      console.log(`📡 API Response from ${model}:`, response.status, response.statusText);
+
+      if (!response.ok) {
+        let errorDetails = '';
+        try {
+          const errorBody = await response.text();
+          console.error(`❌ Error response from ${model}:`, errorBody);
+          errorDetails = errorBody ? ` - ${errorBody}` : '';
+        } catch (parseError) {
+          console.error(`❌ Could not parse error response from ${model}:`, parseError);
+        }
+
+        throw new Error(`HTTP ${response.status}: ${response.statusText}${errorDetails}`);
+      }
+
+      const data = await response.json();
+      console.log(`✅ API Response data from ${model}:`, data);
+      
+      if (data && data.responses && data.responses.length > 0) {
+        const responseData = data.responses[0];
+        return { 
+          response: responseData.content, 
+          model: responseData.provider 
+        };
+      } else {
+        throw new Error('No response data received from server');
+      }
+      
+    } catch (error) {
+      console.error(`🔥 API Error from ${model}:`, error);
+      
+      let errorMessage = `Sorry, I encountered an error while processing your request with ${model}.`;
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = `Unable to connect to the server for ${model}. Please check if the API server is running on port 3001.`;
+      } else if (error instanceof Error) {
+        if (error.message.includes('500')) {
+          errorMessage = `Server error with ${provider} provider. Please check your API keys and server logs.`;
+        } else if (error.message.includes('404')) {
+          errorMessage = `API endpoint not found for ${model}. Please ensure the server route is /api/queries/query.`;
+        } else if (error.message.includes('401') || error.message.includes('403')) {
+          errorMessage = `Authentication failed for ${provider}. Please check your API key.`;
+        }
+      }
+
+      return {
+        response: errorMessage + ' Please try again or contact support if the issue persists.',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  async sendMultiQuery(query: string, models: string[]): Promise<{ [key: string]: ApiResponse }> {
+    const results: { [key: string]: ApiResponse } = {};
+    
+    // Send requests to all models in parallel
+    const promises = models.map(async (model) => {
+      try {
+        const response = await this.sendQuery(query, model);
+        results[model] = response;
+      } catch (error) {
+        results[model] = {
+          response: `Error with ${model}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        };
+      }
+    });
+
+    await Promise.all(promises);
+    return results;
+  }
+}
+
+// Logo Component
+const Logo: React.FC = () => (
+  <div className="flex items-center space-x-2">
+    <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center">
+      <MessageSquare className="w-5 h-5 text-white" />
+    </div>
+    <h1 className="text-xl font-bold">AI-WORLD</h1>
+  </div>
+);
+
+// New Chat Button Component
+const NewChatButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
+  <button 
+    onClick={onClick}
+    className="w-full bg-gray-700 hover:bg-gray-600 rounded-lg p-3 flex items-center justify-center space-x-2 transition-colors"
+  >
+    <Plus className="w-4 h-4" />
+    <span>New Chat</span>
+  </button>
+);
+
+// Projects Section Component
+const ProjectsSection: React.FC = () => (
+  <div className="px-4 mb-4">
+    <div className="flex items-center justify-between mb-2">
+      <h2 className="text-sm font-medium text-gray-400">Projects</h2>
+      <button className="w-5 h-5 rounded bg-gray-600 hover:bg-gray-500 flex items-center justify-center transition-colors">
+        <Plus className="w-3 h-3" />
+      </button>
+    </div>
+  </div>
+);
+
+// Plan Info Component
+const PlanInfo: React.FC<{ messageCount: number }> = ({ messageCount }) => (
+  <div className="bg-gray-700 rounded-lg p-3 mb-3">
+    <h3 className="text-sm font-medium mb-1">Free Plan</h3>
+    <p className="text-xs text-gray-400">{messageCount} / 3 messages used</p>
+    <div className="w-full bg-gray-600 rounded-full h-1.5 mt-2">
+      <div 
+        className="bg-blue-500 h-1.5 rounded-full transition-all" 
+        style={{ width: `${(messageCount / 3) * 100}%` }}
+      ></div>
+    </div>
+  </div>
+);
+
+// Upgrade Button Component
+const UpgradeButton: React.FC = () => (
+  <button className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 rounded-lg p-2.5 flex items-center justify-center space-x-2 transition-all">
+    <Zap className="w-4 h-4" />
+    <span className="text-sm font-medium">Upgrade Plan</span>
+  </button>
+);
+
+// Settings Button Component
+const SettingsButton: React.FC = () => (
+  <button className="w-full mt-2 text-gray-400 hover:text-white flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-700 transition-colors">
+    <Settings className="w-4 h-4" />
+    <span className="text-sm">Settings</span>
+  </button>
+);
+
+// Debug Panel Component
+const DebugPanel: React.FC<{
+  isOpen: boolean;
+  onToggle: () => void;
+  apiLogs: string[];
+}> = ({ isOpen, onToggle, apiLogs }) => {
+  if (!isOpen) {
+    return (
+      <button
+        onClick={onToggle}
+        className="fixed bottom-4 right-4 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-lg z-50"
+        title="Open Debug Panel"
+      >
+        🐛
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed bottom-4 right-4 w-96 h-64 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50">
+      <div className="flex items-center justify-between p-3 border-b border-gray-600">
+        <h3 className="text-sm font-bold text-white">Debug Panel</h3>
+        <button
+          onClick={onToggle}
+          className="text-gray-400 hover:text-white"
+        >
+          ✕
+        </button>
+      </div>
+      <div className="p-3 h-48 overflow-y-auto">
+        <div className="text-xs text-gray-300 space-y-1">
+          {apiLogs.length === 0 ? (
+            <p>No API calls yet...</p>
+          ) : (
+            apiLogs.map((log, index) => (
+              <div key={index} className="font-mono whitespace-pre-wrap">
+                {log}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Sidebar Component
+const Sidebar: React.FC<SidebarProps & { messageCount: number; onNewChat: () => void }> = ({ 
+  models, 
+  messageCount, 
+  onNewChat 
+}) => (
+  <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
+    {/* Logo */}
+    <div className="p-4 border-b border-gray-700">
+      <Logo />
+    </div>
+
+    {/* New Chat Button */}
+    <div className="p-4">
+      <NewChatButton onClick={onNewChat} />
+    </div>
+
+    {/* Projects Section */}
+    <ProjectsSection />
+
+    {/* Spacer */}
+    <div className="flex-1"></div>
+
+    {/* Plan Info */}
+    <div className="p-4 border-t border-gray-700">
+      <PlanInfo messageCount={messageCount} />
+      <UpgradeButton />
+      <SettingsButton />
+    </div>
+  </div>
+);
+
+// Model Toggle Component - Updated for multi-select
+const ModelToggle: React.FC<{
+  model: AIModel;
+  onToggleSelect: () => void;
+  onToggle: () => void;
+}> = ({ model, onToggleSelect, onToggle }) => (
+  <div className="flex items-center space-x-2">
+    <div className={`w-3 h-3 rounded-full ${model.color}`}></div>
+    <button
+      onClick={onToggleSelect}
+      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 ${
+        model.selected
+          ? 'bg-blue-600 text-white shadow-md border-blue-400'
+          : 'bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600 border-gray-600'
+      }`}
+    >
+      {model.selected && <Check className="w-3 h-3 inline mr-1" />}
+      {model.name}
+    </button>
+    <div className="flex items-center space-x-1">
+      <button
+        onClick={onToggle}
+        className={`w-8 h-4 rounded-full relative transition-colors ${
+          model.enabled ? 'bg-green-500' : 'bg-gray-500'
+        }`}
+        title={model.enabled ? 'Enabled' : 'Disabled'}
+      >
+        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${
+          model.enabled ? 'translate-x-4' : 'translate-x-0.5'
+        }`}></div>
+      </button>
+    </div>
+  </div>
+);
+
+// Top Bar Component - Updated for multi-select
+const TopBar: React.FC<TopBarProps> = ({ models, onModelToggleSelect, onToggleModel }) => {
+  const selectedModels = models.filter(m => m.selected);
+  const selectedAll = () => {
+    const enabledModels = models.filter(m => m.enabled);
+    enabledModels.forEach(model => {
+      if (!model.selected) {
+        onModelToggleSelect(model.id);
+      }
+    });
+  };
+  
+  const clearAll = () => {
+    selectedModels.forEach(model => {
+      onModelToggleSelect(model.id);
+    });
+  };
+  
+  return (
+    <div className="border-b border-gray-700 p-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-4">
+            <h2 className="text-lg font-semibold">AI Models</h2>
+            {selectedModels.length > 0 && (
+              <div className="flex items-center space-x-2 px-3 py-1 bg-gray-700 rounded-full">
+                <Users className="w-4 h-4 text-blue-400" />
+                <span className="text-sm text-gray-300">
+                  {selectedModels.length} model{selectedModels.length > 1 ? 's' : ''} selected
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={selectedAll}
+              className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              Select All
+            </button>
+            <button
+              onClick={clearAll}
+              className="px-3 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-4 overflow-x-auto">
+          {models.map((model) => (
+            <ModelToggle
+              key={model.id}
+              model={model}
+              onToggleSelect={() => onModelToggleSelect(model.id)}
+              onToggle={() => onToggleModel(model.id)}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Multi-Response Message Component
+const MultiResponseMessage: React.FC<{ message: Message }> = ({ message }) => {
+  if (!message.isMultiResponse || !message.responses) {
+    return null;
+  }
+
+  return (
+    <div className="mb-6">
+      <div className="flex items-center space-x-2 mb-3">
+        <Users className="w-5 h-5 text-blue-400" />
+        <span className="text-sm text-gray-400">
+          Responses from {message.responses.length} models • {message.timestamp.toLocaleTimeString()}
+        </span>
+      </div>
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+        {message.responses.map((response, index) => (
+          <div key={index} className="bg-gray-700 rounded-lg p-4 border-l-4 border-gray-600">
+            <div className="flex items-center space-x-2 mb-2">
+              <div className="w-2 h-2 rounded-full bg-orange-400"></div>
+              <span className="text-sm font-medium text-orange-400">{response.model}</span>
+              {response.loading && <Loader2 className="w-3 h-3 animate-spin text-blue-400" />}
+            </div>
+            {response.error ? (
+              <p className="text-red-400 text-sm">{response.error}</p>
+            ) : response.loading ? (
+              <p className="text-gray-400 text-sm">Thinking...</p>
+            ) : (
+              <p className="text-gray-100 text-sm whitespace-pre-wrap">{response.content}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Message Component - Enhanced for multi-response
+const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
+  if (message.isMultiResponse) {
+    return <MultiResponseMessage message={message} />;
+  }
+
+  return (
+    <div className={`flex items-start space-x-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
+      {message.role === 'assistant' && (
+        <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
+          <Bot className="w-4 h-4 text-white" />
+        </div>
+      )}
+      
+      <div className={`max-w-2xl p-4 rounded-lg ${
+        message.role === 'user' 
+          ? 'bg-blue-600 text-white ml-12' 
+          : 'bg-gray-700 text-gray-100 mr-12'
+      }`}>
+        <p className="whitespace-pre-wrap">{message.content}</p>
+        <div className="text-xs opacity-70 mt-2 flex items-center space-x-2">
+          <span>{message.timestamp.toLocaleTimeString()}</span>
+          {message.model && (
+            <>
+              <span>•</span>
+              <span className="font-medium">{message.model}</span>
+            </>
+          )}
+        </div>
+      </div>
+      
+      {message.role === 'user' && (
+        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+          <User className="w-4 h-4 text-white" />
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Loading Component - Updated for multi-model
+const LoadingMessage: React.FC<{ selectedModels: string[] }> = ({ selectedModels }) => (
+  <div className="mb-6">
+    <div className="flex items-center space-x-2 mb-3">
+      <Users className="w-5 h-5 text-blue-400" />
+      <span className="text-sm text-gray-400">
+        Getting responses from {selectedModels.length} models...
+      </span>
+    </div>
+    
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+      {selectedModels.map((model, index) => (
+        <div key={index} className="bg-gray-700 rounded-lg p-4 border-l-4 border-blue-500">
+          <div className="flex items-center space-x-2 mb-2">
+            <div className="w-2 h-2 rounded-full bg-orange-400"></div>
+            <span className="text-sm font-medium text-orange-400">{model}</span>
+            <Loader2 className="w-3 h-3 animate-spin text-blue-400" />
+          </div>
+          <p className="text-gray-400 text-sm">Thinking...</p>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+// Welcome Message Component
+const WelcomeMessage: React.FC = () => (
+  <div className="text-center max-w-md">
+    <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+      <MessageSquare className="w-8 h-8 text-white" />
+    </div>
+    <h2 className="text-2xl font-bold mb-2">Welcome to AI Fiesta</h2>
+    <p className="text-gray-400 mb-8">Select one or more AI models above and ask anything to compare their responses side by side.</p>
+  </div>
+);
+
+// Chat Area Component
+const ChatArea: React.FC<ChatAreaProps> = ({ messages, isLoading, selectedModels }) => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoading]);
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 overflow-y-auto p-4">
+        {messages.length === 0 ? (
+          <div className="flex-1 flex flex-col justify-center items-center">
+            <WelcomeMessage />
+          </div>
+        ) : (
+          <div className="max-w-6xl mx-auto">
+            {messages.map((message) => (
+              <MessageBubble key={message.id} message={message} />
+            ))}
+            {isLoading && selectedModels.length > 1 && (
+              <LoadingMessage selectedModels={selectedModels} />
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Input Controls Component
+const InputControls: React.FC<{
+  message: string;
+  onSendMessage: () => void;
+  isLoading: boolean;
+}> = ({ message, onSendMessage, isLoading }) => (
+  <div className="absolute right-3 bottom-3 flex items-center space-x-2">
+    <button className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
+      <Image className="w-5 h-5" />
+    </button>
+    <button className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
+      <Upload className="w-5 h-5" />
+    </button>
+    <button className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
+      <Mic className="w-5 h-5" />
+    </button>
+    <button 
+      onClick={onSendMessage}
+      disabled={!message.trim() || isLoading}
+      className={`p-2 rounded-lg transition-colors ${
+        message.trim() && !isLoading
+          ? 'bg-green-500 hover:bg-green-600 text-white'
+          : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+      }`}
+    >
+      {isLoading ? (
+        <Loader2 className="w-5 h-5 animate-spin" />
+      ) : (
+        <Send className="w-5 h-5" />
+      )}
+    </button>
+  </div>
+);
+
+// Action Buttons Component
+const ActionButtons: React.FC<{ selectedModels: string[] }> = ({ selectedModels }) => (
+  <div className="flex items-center justify-center mt-3 space-x-4">
+    <div className="flex items-center space-x-2 text-xs text-gray-400">
+      <span>Selected:</span>
+      <span className="font-medium text-white">
+        {selectedModels.length > 0 ? `${selectedModels.length} model${selectedModels.length > 1 ? 's' : ''}` : 'None'}
+      </span>
+    </div>
+    <button className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+      <Image className="w-4 h-4" />
+      <span>Generate Image</span>
+    </button>
+    <button className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+      <Upload className="w-4 h-4" />
+      <span>Upload Image</span>
+    </button>
+  </div>
+);
+
+// Input Area Component
+const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendMessage, isLoading, selectedModels }) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
+      e.preventDefault();
+      onSendMessage();
+    }
+  };
+
+  const getPlaceholder = () => {
+    if (selectedModels.length === 0) {
+      return "Select one or more models above to get started...";
+    } else if (selectedModels.length === 1) {
+      return `Ask ${selectedModels[0]} anything...`;
+    } else {
+      return `Ask ${selectedModels.length} models anything to compare responses...`;
+    }
+  };
+
+  return (
+    <div className="border-t border-gray-700 p-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="relative">
+          <textarea
+            value={message}
+            onChange={(e) => onMessageChange(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder={getPlaceholder()}
+            disabled={isLoading || selectedModels.length === 0}
+            className="w-full bg-gray-800 border border-gray-600 rounded-xl p-4 pr-32 text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+            rows={1}
+            style={{ minHeight: '56px', maxHeight: '200px' }}
+          />
+          
+          <InputControls message={message} onSendMessage={onSendMessage} isLoading={isLoading} />
+        </div>
+        
+        <ActionButtons selectedModels={selectedModels} />
+      </div>
+    </div>
+  );
+};
+
+// Main App Component
+const AIFiestaClone: React.FC = () => {
+  const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [debugOpen, setDebugOpen] = useState(false);
+  const [apiLogs, setApiLogs] = useState<string[]>([]);
+  const [models, setModels] = useState<AIModel[]>([
+    { 
+      id: 'chatgpt', 
+      name: 'OpenAI GPT-3.5', 
+      color: 'bg-emerald-500',
+      enabled: true,
+      selected: true
+    },
+    { 
+      id: 'gemini', 
+      name: 'Gemini 1.5 Flash', 
+      color: 'bg-blue-500',
+      enabled: true,
+      selected: false
+    },
+    { 
+      id: 'deepseek', 
+      name: 'DeepSeek Chat', 
+      color: 'bg-purple-500',
+      enabled: true,
+      selected: false
+    },
+    { 
+      id: 'perplexity', 
+      name: 'Mistral Large', 
+      color: 'bg-orange-500',
+      enabled: true,
+      selected: false
+    }
+  ]);
+
+  const apiService = new ApiService();
+  const selectedModels = models.filter(m => m.selected && m.enabled).map(m => m.id);
+
+  const addApiLog = (log: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setApiLogs(prev => [...prev, `[${timestamp}] ${log}`].slice(-20));
+  };
+
+  const generateId = () => Math.random().toString(36).substr(2, 9);
+
+  const handleModelToggleSelect = (modelId: string) => {
+    setModels(prev => prev.map(model => 
+      model.id === modelId ? { ...model, selected: !model.selected } : model
+    ));
+    addApiLog(`Model ${modelId} ${models.find(m => m.id === modelId)?.selected ? 'deselected' : 'selected'}`);
+  };
+
+  const handleSendMessage = async () => {
+    if (!message.trim() || isLoading || selectedModels.length === 0) return;
+
+    const userMessage: Message = {
+      id: generateId(),
+      content: message,
+      role: 'user',
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    const currentMessage = message;
+    setMessage('');
+    setIsLoading(true);
+
+    if (selectedModels.length === 1) {
+      // Single model response
+      addApiLog(`Sending message to ${selectedModels[0]}: "${currentMessage.substring(0, 50)}..."`);
+      
+      try {
+        const response = await apiService.sendQuery(currentMessage, selectedModels[0]);
+        
+        if (response.error) {
+          addApiLog(`API Error from ${selectedModels[0]}: ${response.error}`);
+        } else {
+          addApiLog(`Received response from ${selectedModels[0]}: "${response.response.substring(0, 50)}..."`);
+        }
+        
+        const assistantMessage: Message = {
+          id: generateId(),
+          content: response.response,
+          role: 'assistant',
+          timestamp: new Date(),
+          model: response.model || selectedModels[0],
+        };
+
+        setMessages(prev => [...prev, assistantMessage]);
+      } catch (error) {
+        console.error('Error sending message:', error);
+        addApiLog(`Unexpected error with ${selectedModels[0]}: ${error}`);
+        
+        const errorMessage: Message = {
+          id: generateId(),
+          content: 'Sorry, I encountered an unexpected error. Please check the debug panel for details.',
+          role: 'assistant',
+          timestamp: new Date(),
+          model: selectedModels[0],
+        };
+
+        setMessages(prev => [...prev, errorMessage]);
+      }
+    } else {
+      // Multi-model response
+      addApiLog(`Sending message to ${selectedModels.length} models: "${currentMessage.substring(0, 50)}..."`);
+      
+      // Create initial multi-response message with loading states
+      const multiResponseMessage: Message = {
+        id: generateId(),
+        content: '',
+        role: 'assistant',
+        timestamp: new Date(),
+        isMultiResponse: true,
+        responses: selectedModels.map(model => ({
+          model,
+          content: '',
+          loading: true
+        }))
+      };
+
+      setMessages(prev => [...prev, multiResponseMessage]);
+
+      try {
+        const responses = await apiService.sendMultiQuery(currentMessage, selectedModels);
+        
+        // Update the message with actual responses
+        setMessages(prev => prev.map(msg => {
+          if (msg.id === multiResponseMessage.id) {
+            return {
+              ...msg,
+              responses: selectedModels.map(model => ({
+                model,
+                content: responses[model]?.response || 'No response received',
+                error: responses[model]?.error,
+                loading: false
+              }))
+            };
+          }
+          return msg;
+        }));
+
+        // Log results
+        Object.entries(responses).forEach(([model, response]) => {
+          if (response.error) {
+            addApiLog(`API Error from ${model}: ${response.error}`);
+          } else {
+            addApiLog(`Received response from ${model}: "${response.response.substring(0, 50)}..."`);
+          }
+        });
+
+      } catch (error) {
+        console.error('Error sending multi-message:', error);
+        addApiLog(`Unexpected error in multi-query: ${error}`);
+        
+        // Update with error states
+        setMessages(prev => prev.map(msg => {
+          if (msg.id === multiResponseMessage.id) {
+            return {
+              ...msg,
+              responses: selectedModels.map(model => ({
+                model,
+                content: '',
+                error: 'Unexpected error occurred',
+                loading: false
+              }))
+            };
+          }
+          return msg;
+        }));
+      }
+    }
+
+    setIsLoading(false);
+  };
+
+  const handleToggleModel = (modelId: string) => {
+    setModels(prev => prev.map(model => 
+      model.id === modelId ? { ...model, enabled: !model.enabled } : model
+    ));
+    addApiLog(`Model ${modelId} ${models.find(m => m.id === modelId)?.enabled ? 'disabled' : 'enabled'}`);
+  };
+
+  const handleNewChat = () => {
+    setMessages([]);
+    setMessage('');
+    addApiLog('Started new chat session');
+  };
+
+  const userMessageCount = messages.filter(msg => msg.role === 'user').length;
+
+  return (
+    <div className="flex h-screen bg-gray-900 text-white">
+      <Sidebar 
+        models={models} 
+        messageCount={userMessageCount}
+        onNewChat={handleNewChat}
+      />
+      
+      <div className="flex-1 flex flex-col">
+        <TopBar 
+          models={models}
+          onModelToggleSelect={handleModelToggleSelect}
+          onToggleModel={handleToggleModel}
+        />
+        
+        <ChatArea 
+          messages={messages} 
+          isLoading={isLoading} 
+          selectedModels={selectedModels} 
+        />
+        
+        <InputArea
+          message={message}
+          onMessageChange={setMessage}
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+          selectedModels={selectedModels}
+        />
+      </div>
+
+      {/* Debug Panel */}
+      <DebugPanel
+        isOpen={debugOpen}
+        onToggle={() => setDebugOpen(!debugOpen)}
+        apiLogs={apiLogs}
+      />
+    </div>
+  );
+};
+
+export default AIFiestaClone;

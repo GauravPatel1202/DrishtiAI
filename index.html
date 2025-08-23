@@ -1,12 +1,52 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LuminaAI (DrishtiAI) — AI that ships your ideas</title>
+  <meta name="description"
+    content="LuminaAI (DrishtiAI): modern AI landing page template built with Tailwind CSS. Fast, accessible, responsive." />
+  <style>
+    :root {
+      --bg: #0b0d10;
+      --card: #101418;
+      --muted: #cdd6f4;
+      --text: #e6e8ee;
+      --text-dim: #a5afc7;
+      --primary: #7c5cff;
+      --accent: #00d1ff;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .35), 0 2px 6px rgba(0, 0, 0, .25);
+      --radius: 16px;
+      --radius-lg: 24px;
+      --container: 1200px;
+    }
+  
+    * {
+      box-sizing: border-box;
+      scroll-behavior: smooth;
+    }
+  
+    html,
+    body {
+      height: 100%
+    }
+  
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 600px at 80% -10%, rgba(124, 92, 255, .15), transparent 60%),
+        radial-gradient(900px 500px at -10% 10%, rgba(0, 209, 255, .12), transparent 60%), var(--bg);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+  </style>
   </head>
   <body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KX3ML5F" height="0" width="0"
+        style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
