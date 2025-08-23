@@ -32,7 +32,7 @@ const Header: React.FC = () => {
           <a className="navlinksHide py-2 px-3 rounded-lg text-[#a5afc7] hover:bg-[rgba(255,255,255,0.06)] hover:text-[#e6e8ee] transition-colors duration-300" href="#about">About</a>
           <a className="navlinksHide py-2 px-3 rounded-lg text-[#a5afc7] hover:bg-[rgba(255,255,255,0.06)] hover:text-[#e6e8ee] transition-colors duration-300" href="#faq">FAQ</a>
           <a className="btn btn-ghost py-3 px-4 rounded-xl font-semibold cursor-pointer transition-all duration-300 border border-[rgba(255,255,255,0.16)] text-[#e6e8ee] hover:bg-[rgba(255,255,255,0.08)]" href="#signup">Sign in</a>
-          <a className="btn btn-primary py-3 px-4 rounded-xl font-semibold cursor-pointer transition-all duration-300 bg-gradient-to-br from-[#7c5cff] to-[#00d1ff] text-[#0b0d10] shadow-lg shadow-[rgba(124,92,255,0.25)] hover:translate-y-[-3px] hover:scale-105 hover:shadow-xl hover:shadow-[rgba(124,92,255,0.4)]" href="#signup">Get started</a>
+          <a className="btn btn-primary py-3 px-4 rounded-xl font-semibold cursor-pointer transition-all duration-300 bg-gradient-to-br from-[#7c5cff] to-[#00d1ff] text-[#0b0d10] shadow-lg shadow-[rgba(124,92,255,0.25)] hover:translate-y-[-3px] hover:scale-105 hover:shadow-xl hover:shadow-[rgba(124,92,255,0.4)]" href="ai-app">Get started</a>
         </nav>
       </div>
     </header>
