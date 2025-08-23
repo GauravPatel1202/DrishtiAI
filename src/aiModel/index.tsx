@@ -76,8 +76,6 @@ class ApiService {
       }
 
       const data = await response.json();
-      console.log(`✅ API Response data from ${model}:`, data);
-      
       if (data && data.responses && data.responses.length > 0) {
         const responseData = data.responses[0];
         return { 
@@ -234,7 +232,6 @@ const ModelToggle: React.FC<{
   onToggle: () => void;
 }> = ({ model, onToggleSelect, onToggle }) => (
   <div className="flex items-center space-x-2">
-    <div className={`w-3 h-3 rounded-full ${model.color}`}></div>
     <button
       onClick={onToggleSelect}
       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 ${
@@ -448,7 +445,7 @@ const InputControls: React.FC<{
   onSendMessage: () => void;
   isLoading: boolean;
 }> = ({ message, onSendMessage, isLoading }) => (
-  <div className="absolute right-3 bottom-3 flex items-center space-x-2">
+  <div className="absolute right-3 bottom-3 flex items-center space-x-1">
     <button className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
       <Image className="w-5 h-5" />
     </button>
@@ -523,8 +520,7 @@ const AIFiestaClone: React.FC = () => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [debugOpen, setDebugOpen] = useState(false);
-  const [apiLogs, setApiLogs] = useState<string[]>([]);
+  const [, setApiLogs] = useState<string[]>([]);
   const [models, setModels] = useState<AIModel[]>([
     { 
       id: 'chatgpt', 

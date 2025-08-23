@@ -7,7 +7,10 @@ body {
   background: radial-gradient(1200px 600px at 80% -10%, rgba(124, 92, 255, .15), transparent 60%),
     radial-gradient(900px 500px at -10% 10%, rgba(0, 209, 255, .12), transparent 60%), var(--bg);
   line-height: 1.6;
-  overflow-x: hidden;
+  overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+      height: 100%;
 }
 
 @keyframes pulse {
@@ -379,19 +382,6 @@ img {
 .btn-donate:hover {
   transform: translateY(-3px) scale(1.03);
   box-shadow: 0 15px 25px rgba(255, 92, 124, .4);
-}
-
-/* Sticky Header */
-header {
-  position: sticky;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  backdrop-filter: saturate(160%) blur(10px);
-  background: rgba(11, 13, 16, .85);
-  border-bottom: 1px solid rgba(255, 255, 255, .08);
-  animation: fadeDown .7s ease forwards;
 }
 
 .nav {
