@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  MessageSquare, 
-  Plus, 
-  Settings, 
-  Zap, 
+import {
+  MessageSquare,
+  Plus,
+  Settings,
+  Zap,
   Send,
   Image,
   Upload,
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import type { AIModel, ApiResponse, Message, SidebarProps } from '../lib/type';
 import { Logo } from '../components/logo';
+import clsx from 'clsx';
 interface TopBarProps {
   models: AIModel[];
   onModelToggleSelect: (modelId: string) => void;
@@ -49,7 +50,7 @@ class ApiService {
     };
 
     const provider = providerMapping[model] || 'openai';
-    
+
     const requestPayload = {
       prompt: query,
       providers: [provider]
@@ -79,18 +80,18 @@ class ApiService {
       const data = await response.json();
       if (data && data.responses && data.responses.length > 0) {
         const responseData = data.responses[0];
-        return { 
-          response: responseData.content, 
-          model: responseData.provider 
+        return {
+          response: responseData.content,
+          model: responseData.provider
         };
       } else {
         throw new Error('No response data received from server');
       }
-      
+
     } catch (error) {
-      
+
       let errorMessage = `Sorry, I encountered an error while processing your request with ${model}.`;
-      
+
       if (error instanceof TypeError && error.message.includes('fetch')) {
         errorMessage = `Unable to connect to the server for ${model}. Please check if the API server is running on port 3001.`;
       } else if (error instanceof Error) {
@@ -112,7 +113,7 @@ class ApiService {
 
   async sendMultiQuery(query: string, models: string[]): Promise<{ [key: string]: ApiResponse }> {
     const results: { [key: string]: ApiResponse } = {};
-    
+
     // Send requests to all models in parallel
     const promises = models.map(async (model) => {
       try {
@@ -132,7 +133,7 @@ class ApiService {
 }
 // New Chat Button Component
 const NewChatButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
-  <button 
+  <button
     onClick={onClick}
     className="w-full bg-gray-700 hover:bg-gray-600 rounded-lg p-3 flex items-center justify-center space-x-2 transition-colors"
   >
@@ -159,8 +160,8 @@ const PlanInfo: React.FC<{ messageCount: number }> = ({ messageCount }) => (
     <h3 className="text-sm font-medium mb-1">Free Plan</h3>
     <p className="text-xs text-gray-400">{messageCount} / 3 messages used</p>
     <div className="w-full bg-gray-600 rounded-full h-1.5 mt-2">
-      <div 
-        className="bg-blue-500 h-1.5 rounded-full transition-all" 
+      <div
+        className="bg-blue-500 h-1.5 rounded-full transition-all"
         style={{ width: `${(messageCount / 3) * 100}%` }}
       ></div>
     </div>
@@ -184,10 +185,10 @@ const SettingsButton: React.FC = () => (
 );
 
 // Sidebar Component
-const Sidebar: React.FC<SidebarProps & { messageCount: number; onNewChat: () => void }> = ({ 
-  models, 
-  messageCount, 
-  onNewChat 
+const Sidebar: React.FC<SidebarProps & { messageCount: number; onNewChat: () => void }> = ({
+  models,
+  messageCount,
+  onNewChat
 }) => (
   <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
     {/* Logo */}
@@ -224,11 +225,10 @@ const ModelToggle: React.FC<{
   <div className="flex items-center space-x-2">
     <button
       onClick={onToggleSelect}
-      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 ${
-        model.selected
-          ? 'bg-blue-600 text-white shadow-md border-blue-400'
-          : 'bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600 border-gray-600'
-      }`}
+      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 ${model.selected
+        ? 'bg-blue-600 text-white shadow-md border-blue-400'
+        : 'bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600 border-gray-600'
+        }`}
     >
       {model.selected && <Check className="w-3 h-3 inline mr-1" />}
       {model.name}
@@ -236,14 +236,12 @@ const ModelToggle: React.FC<{
     <div className="flex items-center space-x-1">
       <button
         onClick={onToggle}
-        className={`w-8 h-4 rounded-full relative transition-colors ${
-          model.enabled ? 'bg-green-500' : 'bg-gray-500'
-        }`}
+        className={`w-8 h-4 rounded-full relative transition-colors ${model.enabled ? 'bg-green-500' : 'bg-gray-500'
+          }`}
         title={model.enabled ? 'Enabled' : 'Disabled'}
       >
-        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${
-          model.enabled ? 'translate-x-4' : 'translate-x-0.5'
-        }`}></div>
+        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${model.enabled ? 'translate-x-4' : 'translate-x-0.5'
+          }`}></div>
       </button>
     </div>
   </div>
@@ -251,22 +249,6 @@ const ModelToggle: React.FC<{
 
 // Top Bar Component - Updated for multi-select
 const TopBar: React.FC<TopBarProps> = ({ models, onModelToggleSelect, onToggleModel }) => {
-  const selectedModels = models.filter(m => m.selected);
-  const selectedAll = () => {
-    const enabledModels = models.filter(m => m.enabled);
-    enabledModels.forEach(model => {
-      if (!model.selected) {
-        onModelToggleSelect(model.id);
-      }
-    });
-  };
-  
-  const clearAll = () => {
-    selectedModels.forEach(model => {
-      onModelToggleSelect(model.id);
-    });
-  };
-  
   return (
     <div className="border-b border-gray-700 p-4">
       <div className="max-w-6xl mx-auto">
@@ -299,7 +281,7 @@ const MultiResponseMessage: React.FC<{ message: Message }> = ({ message }) => {
           Responses from {message.responses.length} models • {message.timestamp.toLocaleTimeString()}
         </span>
       </div>
-      
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
         {message.responses.map((response, index) => (
           <div key={index} className="bg-gray-700 rounded-lg p-4 border-l-4 border-gray-600">
@@ -324,6 +306,7 @@ const MultiResponseMessage: React.FC<{ message: Message }> = ({ message }) => {
 
 // Message Component - Enhanced for multi-response
 const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
+  debugger
   if (message.isMultiResponse) {
     return <MultiResponseMessage message={message} />;
   }
@@ -335,12 +318,11 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
           <Bot className="w-4 h-4 text-white" />
         </div>
       )}
-      
-      <div className={`max-w-2xl p-4 rounded-lg ${
-        message.role === 'user' 
-          ? 'bg-blue-600 text-white ml-12' 
-          : 'bg-gray-700 text-gray-100 mr-12'
-      }`}>
+
+      <div className={`max-w-2xl p-4 rounded-lg ${message.role === 'user'
+        ? 'bg-blue-600 text-white ml-12'
+        : 'bg-gray-700 text-gray-100 mr-12'
+        }`}>
         <p className="whitespace-pre-wrap">{message.content}</p>
         <div className="text-xs opacity-70 mt-2 flex items-center space-x-2">
           <span>{message.timestamp.toLocaleTimeString()}</span>
@@ -352,7 +334,7 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
           )}
         </div>
       </div>
-      
+
       {message.role === 'user' && (
         <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
           <User className="w-4 h-4 text-white" />
@@ -371,7 +353,7 @@ const LoadingMessage: React.FC<{ selectedModels: string[] }> = ({ selectedModels
         Getting responses from {selectedModels.length} models...
       </span>
     </div>
-    
+
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
       {selectedModels.map((model, index) => (
         <div key={index} className="bg-gray-700 rounded-lg p-4 border-l-4 border-blue-500">
@@ -402,26 +384,44 @@ const WelcomeMessage: React.FC = () => (
 const ChatArea: React.FC<ChatAreaProps> = ({ messages, isLoading, selectedModels }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  debugger
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
+  }, [messages, isLoading, selectedModels]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto p-4">
-        {messages.length === 0 ? (
+        {selectedModels.length === 0 ? (
           <div className="flex-1 flex flex-col justify-center items-center">
             <WelcomeMessage />
           </div>
         ) : (
-          <div className="max-w-6xl mx-auto">
-            {messages.map((message) => (
-              <MessageBubble key={message.id} message={message} />
-            ))}
-            {isLoading && selectedModels.length > 1 && (
-              <LoadingMessage selectedModels={selectedModels} />
-            )}
-            <div ref={messagesEndRef} />
+            <div className="flex mx-auto flex-1 h-full gap-8">
+              {selectedModels.map((selectModels: string, index: number) => {
+                let isLast = index === selectedModels.length - 1;
+                return <div className={clsx('flex-col px-4 flex-1 ', {
+                  "border-r border-gray-700": !isLast
+                })}>
+                  {messages.map((message) => (
+                    <MessageBubble
+                      key={message.id}
+                      message={
+                        message.isMultiResponse
+                          ? {
+                            ...message,
+                            responses: message.responses?.filter((res) => res.model === selectModels) ?? []
+                          }
+                          : message
+                      }
+                    />
+                  ))}
+                  {isLoading && selectedModels.length > 1 && (
+                    <LoadingMessage selectedModels={selectedModels} />
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+              })}
           </div>
         )}
       </div>
@@ -445,14 +445,13 @@ const InputControls: React.FC<{
     <button className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
       <Mic className="w-5 h-5" />
     </button>
-    <button 
+    <button
       onClick={onSendMessage}
       disabled={!message.trim() || isLoading}
-      className={`p-2 rounded-lg transition-colors ${
-        message.trim() && !isLoading
-          ? 'bg-green-500 hover:bg-green-600 text-white'
-          : 'bg-gray-700 text-gray-400 cursor-not-allowed'
-      }`}
+      className={`p-2 rounded-lg transition-colors ${message.trim() && !isLoading
+        ? 'bg-green-500 hover:bg-green-600 text-white'
+        : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+        }`}
     >
       {isLoading ? (
         <Loader2 className="w-5 h-5 animate-spin" />
@@ -497,7 +496,6 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
             rows={1}
             style={{ minHeight: '56px', maxHeight: '200px' }}
           />
-          
           <InputControls message={message} onSendMessage={onSendMessage} isLoading={isLoading} />
         </div>
       </div>
@@ -512,30 +510,30 @@ const AIFiestaClone: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [, setApiLogs] = useState<string[]>([]);
   const [models, setModels] = useState<AIModel[]>([
-    { 
-      id: 'chatgpt', 
-      name: 'OpenAI GPT-3.5', 
+    {
+      id: 'chatgpt',
+      name: 'OpenAI GPT-3.5',
       color: 'bg-emerald-500',
       enabled: true,
       selected: true
     },
-    { 
-      id: 'gemini', 
-      name: 'Gemini 1.5 Flash', 
+    {
+      id: 'gemini',
+      name: 'Gemini 1.5 Flash',
       color: 'bg-blue-500',
       enabled: true,
       selected: true
     },
-    { 
-      id: 'deepseek', 
-      name: 'DeepSeek Chat', 
+    {
+      id: 'deepseek',
+      name: 'DeepSeek Chat',
       color: 'bg-purple-500',
       enabled: true,
       selected: true
     },
-    { 
-      id: 'perplexity', 
-      name: 'Mistral Large', 
+    {
+      id: 'perplexity',
+      name: 'Mistral Large',
       color: 'bg-orange-500',
       enabled: true,
       selected: true
@@ -553,7 +551,7 @@ const AIFiestaClone: React.FC = () => {
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
   const handleModelToggleSelect = (modelId: string) => {
-    setModels(prev => prev.map(model => 
+    setModels(prev => prev.map(model =>
       model.id === modelId ? { ...model, selected: !model.selected } : model
     ));
     addApiLog(`Model ${modelId} ${models.find(m => m.id === modelId)?.selected ? 'deselected' : 'selected'}`);
@@ -577,16 +575,16 @@ const AIFiestaClone: React.FC = () => {
     if (selectedModels.length === 1) {
       // Single model response
       addApiLog(`Sending message to ${selectedModels[0]}: "${currentMessage.substring(0, 50)}..."`);
-      
+
       try {
         const response = await apiService.sendQuery(currentMessage, selectedModels[0]);
-        
+
         if (response.error) {
           addApiLog(`API Error from ${selectedModels[0]}: ${response.error}`);
         } else {
           addApiLog(`Received response from ${selectedModels[0]}: "${response.response.substring(0, 50)}..."`);
         }
-        
+
         const assistantMessage: Message = {
           id: generateId(),
           content: response.response,
@@ -599,7 +597,7 @@ const AIFiestaClone: React.FC = () => {
       } catch (error) {
         console.error('Error sending message:', error);
         addApiLog(`Unexpected error with ${selectedModels[0]}: ${error}`);
-        
+
         const errorMessage: Message = {
           id: generateId(),
           content: 'Sorry, I encountered an unexpected error. Please check the debug panel for details.',
@@ -613,7 +611,7 @@ const AIFiestaClone: React.FC = () => {
     } else {
       // Multi-model response
       addApiLog(`Sending message to ${selectedModels.length} models: "${currentMessage.substring(0, 50)}..."`);
-      
+
       // Create initial multi-response message with loading states
       const multiResponseMessage: Message = {
         id: generateId(),
@@ -632,7 +630,7 @@ const AIFiestaClone: React.FC = () => {
 
       try {
         const responses = await apiService.sendMultiQuery(currentMessage, selectedModels);
-        
+
         // Update the message with actual responses
         setMessages(prev => prev.map(msg => {
           if (msg.id === multiResponseMessage.id) {
@@ -661,7 +659,7 @@ const AIFiestaClone: React.FC = () => {
       } catch (error) {
         console.error('Error sending multi-message:', error);
         addApiLog(`Unexpected error in multi-query: ${error}`);
-        
+
         // Update with error states
         setMessages(prev => prev.map(msg => {
           if (msg.id === multiResponseMessage.id) {
@@ -684,7 +682,7 @@ const AIFiestaClone: React.FC = () => {
   };
 
   const handleToggleModel = (modelId: string) => {
-    setModels(prev => prev.map(model => 
+    setModels(prev => prev.map(model =>
       model.id === modelId ? { ...model, enabled: !model.enabled } : model
     ));
     addApiLog(`Model ${modelId} ${models.find(m => m.id === modelId)?.enabled ? 'disabled' : 'enabled'}`);
@@ -700,25 +698,25 @@ const AIFiestaClone: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
-      <Sidebar 
-        models={models} 
+      <Sidebar
+        models={models}
         messageCount={userMessageCount}
         onNewChat={handleNewChat}
       />
-      
+
       <div className="flex-1 flex flex-col">
-        <TopBar 
+        <TopBar
           models={models}
           onModelToggleSelect={handleModelToggleSelect}
           onToggleModel={handleToggleModel}
         />
-        
-        <ChatArea 
-          messages={messages} 
-          isLoading={isLoading} 
-          selectedModels={selectedModels} 
+
+        <ChatArea
+          messages={messages}
+          isLoading={isLoading}
+          selectedModels={selectedModels}
         />
-        
+
         <InputArea
           message={message}
           onMessageChange={setMessage}
