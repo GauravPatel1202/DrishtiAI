@@ -18,6 +18,4 @@ const Hero: React.FC = () => {
       </section>
   );
 };
-
-
 export default Hero;
