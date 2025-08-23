@@ -14,43 +14,7 @@ import {
   Check,
   Users
 } from 'lucide-react';
-
-// Types
-interface AIModel {
-  id: string;
-  name: string;
-  color: string;
-  enabled: boolean;
-  selected: boolean;
-}
-
-interface Message {
-  id: string;
-  content: string;
-  role: 'user' | 'assistant';
-  timestamp: Date;
-  model?: string;
-  isMultiResponse?: boolean;
-  responses?: ModelResponse[];
-}
-
-interface ModelResponse {
-  model: string;
-  content: string;
-  error?: string;
-  loading?: boolean;
-}
-
-interface ApiResponse {
-  response: string;
-  model?: string;
-  error?: string;
-}
-
-interface SidebarProps {
-  models: AIModel[];
-}
-
+import type { AIModel, ApiResponse, Message, SidebarProps } from '../lib/type';
 interface TopBarProps {
   models: AIModel[];
   onModelToggleSelect: (modelId: string) => void;
@@ -230,52 +194,6 @@ const SettingsButton: React.FC = () => (
     <span className="text-sm">Settings</span>
   </button>
 );
-
-// Debug Panel Component
-const DebugPanel: React.FC<{
-  isOpen: boolean;
-  onToggle: () => void;
-  apiLogs: string[];
-}> = ({ isOpen, onToggle, apiLogs }) => {
-  if (!isOpen) {
-    return (
-      <button
-        onClick={onToggle}
-        className="fixed bottom-4 right-4 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-lg z-50"
-        title="Open Debug Panel"
-      >
-        🐛
-      </button>
-    );
-  }
-
-  return (
-    <div className="fixed bottom-4 right-4 w-96 h-64 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50">
-      <div className="flex items-center justify-between p-3 border-b border-gray-600">
-        <h3 className="text-sm font-bold text-white">Debug Panel</h3>
-        <button
-          onClick={onToggle}
-          className="text-gray-400 hover:text-white"
-        >
-          ✕
-        </button>
-      </div>
-      <div className="p-3 h-48 overflow-y-auto">
-        <div className="text-xs text-gray-300 space-y-1">
-          {apiLogs.length === 0 ? (
-            <p>No API calls yet...</p>
-          ) : (
-            apiLogs.map((log, index) => (
-              <div key={index} className="font-mono whitespace-pre-wrap">
-                {log}
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // Sidebar Component
 const Sidebar: React.FC<SidebarProps & { messageCount: number; onNewChat: () => void }> = ({ 
