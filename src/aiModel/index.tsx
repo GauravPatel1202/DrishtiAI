@@ -89,15 +89,6 @@ class ApiService {
       prompt: query,
       providers: [provider]
     };
-
-    console.log(`🚀 Sending API request to ${model}:`, {
-      url: `${this.baseUrl}/query`,
-      method: 'POST',
-      payload: requestPayload,
-      selectedModel: model,
-      mappedProvider: provider
-    });
-
     try {
       const response = await fetch(`${this.baseUrl}/query`, {
         method: 'POST',
@@ -107,9 +98,6 @@ class ApiService {
         },
         body: JSON.stringify(requestPayload),
       });
-
-      console.log(`📡 API Response from ${model}:`, response.status, response.statusText);
-
       if (!response.ok) {
         let errorDetails = '';
         try {
@@ -137,7 +125,6 @@ class ApiService {
       }
       
     } catch (error) {
-      console.error(`🔥 API Error from ${model}:`, error);
       
       let errorMessage = `Sorry, I encountered an error while processing your request with ${model}.`;
       
@@ -378,34 +365,6 @@ const TopBar: React.FC<TopBarProps> = ({ models, onModelToggleSelect, onToggleMo
   return (
     <div className="border-b border-gray-700 p-4">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-4">
-            <h2 className="text-lg font-semibold">AI Models</h2>
-            {selectedModels.length > 0 && (
-              <div className="flex items-center space-x-2 px-3 py-1 bg-gray-700 rounded-full">
-                <Users className="w-4 h-4 text-blue-400" />
-                <span className="text-sm text-gray-300">
-                  {selectedModels.length} model{selectedModels.length > 1 ? 's' : ''} selected
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={selectedAll}
-              className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            >
-              Select All
-            </button>
-            <button
-              onClick={clearAll}
-              className="px-3 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
-            >
-              Clear All
-            </button>
-          </div>
-        </div>
-        
         <div className="flex items-center space-x-4 overflow-x-auto">
           {models.map((model) => (
             <ModelToggle
@@ -599,25 +558,6 @@ const InputControls: React.FC<{
   </div>
 );
 
-// Action Buttons Component
-const ActionButtons: React.FC<{ selectedModels: string[] }> = ({ selectedModels }) => (
-  <div className="flex items-center justify-center mt-3 space-x-4">
-    <div className="flex items-center space-x-2 text-xs text-gray-400">
-      <span>Selected:</span>
-      <span className="font-medium text-white">
-        {selectedModels.length > 0 ? `${selectedModels.length} model${selectedModels.length > 1 ? 's' : ''}` : 'None'}
-      </span>
-    </div>
-    <button className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
-      <Image className="w-4 h-4" />
-      <span>Generate Image</span>
-    </button>
-    <button className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
-      <Upload className="w-4 h-4" />
-      <span>Upload Image</span>
-    </button>
-  </div>
-);
 
 // Input Area Component
 const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendMessage, isLoading, selectedModels }) => {
@@ -655,8 +595,6 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
           
           <InputControls message={message} onSendMessage={onSendMessage} isLoading={isLoading} />
         </div>
-        
-        <ActionButtons selectedModels={selectedModels} />
       </div>
     </div>
   );
@@ -682,21 +620,21 @@ const AIFiestaClone: React.FC = () => {
       name: 'Gemini 1.5 Flash', 
       color: 'bg-blue-500',
       enabled: true,
-      selected: false
+      selected: true
     },
     { 
       id: 'deepseek', 
       name: 'DeepSeek Chat', 
       color: 'bg-purple-500',
       enabled: true,
-      selected: false
+      selected: true
     },
     { 
       id: 'perplexity', 
       name: 'Mistral Large', 
       color: 'bg-orange-500',
       enabled: true,
-      selected: false
+      selected: true
     }
   ]);
 
@@ -885,13 +823,6 @@ const AIFiestaClone: React.FC = () => {
           selectedModels={selectedModels}
         />
       </div>
-
-      {/* Debug Panel */}
-      <DebugPanel
-        isOpen={debugOpen}
-        onToggle={() => setDebugOpen(!debugOpen)}
-        apiLogs={apiLogs}
-      />
     </div>
   );
 };
