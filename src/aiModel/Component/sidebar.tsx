@@ -1,6 +1,8 @@
 import { Plus, Settings, Zap } from "lucide-react";
 import { Logo } from "../../components/logo";
 import type { SidebarProps } from "../../lib/type";
+import { useMemo } from "react";
+import { MAX_LIMITS } from "../../lib/config";
 
 export const Sidebar: React.FC<SidebarProps & { messageCount: number; onNewChat: () => void }> = ({
   messageCount,
@@ -49,18 +51,27 @@ const ProjectsSection: React.FC = () => (
   </div>
 );
 
-const PlanInfo: React.FC<{ messageCount: number }> = ({ messageCount }) => (
+const PlanInfo: React.FC<{ messageCount: number }> = ({ messageCount }) => {
+    let messCount = useMemo(() => {
+        if (messageCount <= MAX_LIMITS) {
+            return messageCount
+        } else {
+            return MAX_LIMITS
+        }
+    }, [messageCount])
+    return (
   <div className="bg-gray-700 rounded-lg p-3 mb-3">
     <h3 className="text-sm font-medium mb-1">Free Plan</h3>
-    <p className="text-xs text-gray-400">{messageCount} / 3 messages used</p>
+            <p className="text-xs text-gray-400">{messCount} / {MAX_LIMITS} messages used</p>
     <div className="w-full bg-gray-600 rounded-full h-1.5 mt-2">
       <div
         className="bg-blue-500 h-1.5 rounded-full transition-all"
-        style={{ width: `${(messageCount / 3) * 100}%` }}
+                    style={{ width: `${(messCount / MAX_LIMITS) * 100}%` }}
       ></div>
     </div>
   </div>
 );
+}
 
 const UpgradeButton: React.FC = () => (
   <button className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 rounded-lg p-2.5 flex items-center justify-center space-x-2 transition-all">
