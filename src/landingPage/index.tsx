@@ -5,10 +5,9 @@ import Hero from '../components/Hero';
 import CTABanner from '../components/CTABanner';
 import ModelSection from '../components/ModelSection';
 import AIShowcase from '../components/AIShowcase';
-import AboutSection from '../components/AboutSection';
-import DonationSection from '../components/DonationSection';
 import FAQ from '../components/FAQ';
 import Footer from '../components/Footer';
+import YoutubeDonationAboutSection from './Component/youtube';
 const LandingPage: React.FC = () => {
   return (
     <div>
@@ -17,8 +16,7 @@ const LandingPage: React.FC = () => {
       <CTABanner />
       <ModelSection />
       <AIShowcase />
-      <AboutSection />
-      <DonationSection />
+      <YoutubeDonationAboutSection />
       <FAQ />
       <Footer />
     </div>
