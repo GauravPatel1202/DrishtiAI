@@ -3,11 +3,11 @@ name: Deploy to AWS
 on:
   push:
     branches:
-      - main   # or your deploy branch
+      - main
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest   # ✅ use GitHub-hosted runner
 
     steps:
       - name: Checkout code
@@ -16,13 +16,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18' # match your AWS environment
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build app
-        run: npm run build
+          node-version: '18'
 
       - name: Deploy to AWS server via SSH
         uses: appleboy/ssh-action@v0.1.10
