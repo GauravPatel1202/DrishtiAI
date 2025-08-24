@@ -1,35 +1,60 @@
-import { Plus, Settings, Zap } from "lucide-react";
+import { Plus, Settings, Zap, X } from "lucide-react";
 import { Logo } from "../../components/logo";
 import type { SidebarProps } from "../../lib/type";
 import { useMemo } from "react";
 import { MAX_LIMITS } from "../../lib/config";
 
-export const Sidebar: React.FC<SidebarProps & { messageCount: number; onNewChat: () => void }> = ({
+export const Sidebar: React.FC<SidebarProps & { messageCount: number; onNewChat: () => void; isOpen: boolean, setIsOpen: (val: boolean) => void }> = ({
+  isOpen = false,
   messageCount,
-  onNewChat
-}) => (
-  <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
-    <div className="p-4 border-b border-gray-700">
-      <Logo />
-    </div>
+  onNewChat,
+  setIsOpen
+}) => {
+  return (
+    <>
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setIsOpen(false)}
+        ></div>
+      )}
 
-    <div className="p-4">
-      <NewChatButton onClick={onNewChat} />
-    </div>
+      {/* Sidebar - Full screen on mobile */}
+      <div className={`
+                   fixed lg:static inset-0 lg:inset-y-0 lg:left-0 z-40
+                   w-full lg:w-64 bg-gray-800 border-r border-gray-700 flex flex-col
+                   transform transition-transform duration-300 ease-in-out
+                   lg:translate-x-0
+                   ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                 `}>
+        <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+          <Logo />
+          <button
+            onClick={() => setIsOpen(false)}
+            className="lg:hidden p-1 rounded-md text-gray-400 hover:text-white"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        <div className="p-4">
+          <NewChatButton onClick={() => {
+            onNewChat();
+            setIsOpen(false);
+          }} />
+        </div>
+        <ProjectsSection />
+        <div className="flex-1"></div>
+        <div className="p-4 border-t border-gray-700">
+          <PlanInfo messageCount={messageCount} />
+          <UpgradeButton />
+          <SettingsButton />
+        </div>
+      </div>
+    </>
+  );
+};
 
-    <ProjectsSection />
-
-    <div className="flex-1"></div>
-
-    <div className="p-4 border-t border-gray-700">
-      <PlanInfo messageCount={messageCount} />
-      <UpgradeButton />
-      <SettingsButton />
-    </div>
-  </div>
-);
-
-// UI Components
+// UI Components (unchanged from your original code)
 const NewChatButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <button
     onClick={onClick}

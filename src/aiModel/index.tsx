@@ -9,15 +9,19 @@ import {
   Bot,
   Loader2,
   Check,
-  Users
+  Users,
+  Menu
 } from 'lucide-react';
 import type { AIModel, ApiResponse, Message } from '../lib/type';
 import clsx from 'clsx';
+import { Logo } from '../components/logo';
 import { Sidebar } from './Component/sidebar';
+
 interface TopBarProps {
   models: AIModel[];
   onModelToggleSelect: (modelId: string) => void;
   onToggleModel: (modelId: string) => void;
+  onMenuClick: () => void;
 }
 interface ChatAreaProps {
   messages: Message[];
@@ -63,10 +67,9 @@ class ApiService {
         let errorDetails = '';
         try {
           const errorBody = await response.text();
-          console.error(`❌ Error response from ${model}:`, errorBody);
+
           errorDetails = errorBody ? ` - ${errorBody}` : '';
         } catch (parseError) {
-          console.error(`❌ Could not parse error response from ${model}:`, parseError);
         }
 
         throw new Error(`HTTP ${response.status}: ${response.statusText}${errorDetails}`);
@@ -127,11 +130,7 @@ class ApiService {
   }
 }
 
-
-
-
-
-// Model Toggle Component - Updated for multi-select
+// Model Toggle Component - Updated for mobile
 const ModelToggle: React.FC<{
   model: AIModel;
   onToggleSelect: () => void;
@@ -140,13 +139,14 @@ const ModelToggle: React.FC<{
   <div className="flex items-center space-x-2">
     <button
       onClick={onToggleSelect}
-      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 ${model.selected
+      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all border-2 ${model.selected
         ? 'bg-blue-600 text-white shadow-md border-blue-400'
         : 'bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600 border-gray-600'
         }`}
     >
       {model.selected && <Check className="w-3 h-3 inline mr-1" />}
-      {model.name}
+      <span className="hidden sm:inline">{model.name}</span>
+      <span className="sm:hidden">{model.name.split(' ')[0]}</span>
     </button>
     <div className="flex items-center space-x-1">
       <button
@@ -162,20 +162,42 @@ const ModelToggle: React.FC<{
   </div>
 );
 
-// Top Bar Component - Updated for multi-select
-const TopBar: React.FC<TopBarProps> = ({ models, onModelToggleSelect, onToggleModel }) => {
+// Top Bar Component - Updated for mobile
+const TopBar: React.FC<TopBarProps> = ({ models, onModelToggleSelect, onToggleModel, onMenuClick }) => {
+  const [showModels, setShowModels] = useState(false);
+
   return (
-    <div className="border-b border-gray-700 p-4">
+    <div className="border-b border-gray-700 p-3 sm:p-4">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center space-x-4 overflow-x-auto">
-          {models.map((model) => (
-            <ModelToggle
-              key={model.id}
-              model={model}
-              onToggleSelect={() => onModelToggleSelect(model.id)}
-              onToggle={() => onToggleModel(model.id)}
-            />
-          ))}
+        {/* Mobile header */}
+        <div className="lg:hidden flex items-center justify-between mb-3">
+          <button
+            onClick={onMenuClick}
+            className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <Logo />
+          <button
+            onClick={() => setShowModels(!showModels)}
+            className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700"
+          >
+            <Users className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Models section - always visible on desktop, toggleable on mobile */}
+        <div className={`${showModels ? 'block' : 'hidden'} lg:block`}>
+          <div className="flex flex-wrap gap-2">
+            {models.map((model) => (
+              <ModelToggle
+                key={model.id}
+                model={model}
+                onToggleSelect={() => onModelToggleSelect(model.id)}
+                onToggle={() => onToggleModel(model.id)}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -219,9 +241,8 @@ const MultiResponseMessage: React.FC<{ message: Message }> = ({ message }) => {
   );
 };
 
-// Message Component - Enhanced for multi-response
+// Message Component - Enhanced for mobile
 const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
-  debugger
   if (message.isMultiResponse) {
     return <MultiResponseMessage message={message} />;
   }
@@ -229,16 +250,16 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
   return (
     <div className={`flex items-start space-x-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
       {message.role === 'assistant' && (
-        <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
-          <Bot className="w-4 h-4 text-white" />
+        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
+          <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
         </div>
       )}
 
-      <div className={`max-w-2xl p-4 rounded-lg ${message.role === 'user'
-        ? 'bg-blue-600 text-white ml-12'
-        : 'bg-gray-700 text-gray-100 mr-12'
+      <div className={`max-w-xs sm:max-w-md md:max-w-lg p-3 sm:p-4 rounded-lg ${message.role === 'user'
+        ? 'bg-blue-600 text-white ml-8 sm:ml-12'
+        : 'bg-gray-700 text-gray-100 mr-8 sm:mr-12'
         }`}>
-        <p className="whitespace-pre-wrap">{message.content}</p>
+        <p className="whitespace-pre-wrap text-sm sm:text-base">{message.content}</p>
         <div className="text-xs opacity-70 mt-2 flex items-center space-x-2">
           <span>{message.timestamp.toLocaleTimeString()}</span>
           {message.model && (
@@ -251,15 +272,15 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
       </div>
 
       {message.role === 'user' && (
-        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-          <User className="w-4 h-4 text-white" />
+        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+          <User className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
         </div>
       )}
     </div>
   );
 };
 
-// Loading Component - Updated for multi-model
+// Loading Component - Updated for mobile
 const LoadingMessage: React.FC<{ selectedModels: string[] }> = ({ selectedModels }) => (
   <div className="mb-6">
     <div className="flex items-center space-x-2 mb-3">
@@ -284,40 +305,43 @@ const LoadingMessage: React.FC<{ selectedModels: string[] }> = ({ selectedModels
   </div>
 );
 
-// Welcome Message Component
+// Welcome Message Component - Updated for mobile
 const WelcomeMessage: React.FC = () => (
-  <div className="text-center max-w-md">
-    <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl flex items-center justify-center mb-6 mx-auto">
-      <MessageSquare className="w-8 h-8 text-white" />
+  <div className="text-center max-w-md px-4">
+    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+      <MessageSquare className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
     </div>
-    <h2 className="text-2xl font-bold mb-2">Welcome to AI Fiesta</h2>
-    <p className="text-gray-400 mb-8">Select one or more AI models above and ask anything to compare their responses side by side.</p>
+    <h2 className="text-xl sm:text-2xl font-bold mb-2">Welcome to AI Fiesta</h2>
+    <p className="text-gray-400 text-sm sm:text-base mb-6">Select one or more AI models above and ask anything to compare their responses side by side.</p>
   </div>
 );
 
-// Chat Area Component
+// Chat Area Component - Updated for mobile
 const ChatArea: React.FC<ChatAreaProps> = ({ messages, isLoading, selectedModels }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  debugger
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading, selectedModels]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4">
         {selectedModels.length === 0 ? (
           <div className="flex-1 flex flex-col justify-center items-center">
             <WelcomeMessage />
           </div>
         ) : (
-            <div className="flex mx-auto flex-1 h-full gap-8">
+            <div className="flex flex-col lg:flex-row mx-auto flex-1 h-full gap-4 lg:gap-8">
               {selectedModels.map((selectModels: string, index: number) => {
                 let isLast = index === selectedModels.length - 1;
-                return <div className={clsx('flex-col px-4 flex-1 ', {
-                  "border-r border-gray-700": !isLast
-                })}>
+                return (
+                  <div
+                    key={selectModels}
+                    className={clsx('flex-col px-2 sm:px-4 flex-1', {
+                      "lg:border-r lg:border-gray-700": !isLast
+                    })}
+                  >
                   {messages.map((message) => (
                     <MessageBubble
                       key={message.id}
@@ -336,6 +360,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ messages, isLoading, selectedModels
                   )}
                   <div ref={messagesEndRef} />
                 </div>
+                );
               })}
           </div>
         )}
@@ -344,41 +369,40 @@ const ChatArea: React.FC<ChatAreaProps> = ({ messages, isLoading, selectedModels
   );
 };
 
-// Input Controls Component
+// Input Controls Component - Updated for mobile
 const InputControls: React.FC<{
   message: string;
   onSendMessage: () => void;
   isLoading: boolean;
 }> = ({ message, onSendMessage, isLoading }) => (
-  <div className="absolute right-3 bottom-3 flex items-center space-x-1">
-    <button className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
-      <Image className="w-5 h-5" />
+  <div className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 flex items-center space-x-1">
+    <button className="p-1 sm:p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
+      <Image className="w-4 h-4 sm:w-5 sm:h-5" />
     </button>
-    <button className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
-      <Upload className="w-5 h-5" />
+    <button className="p-1 sm:p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
+      <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
     </button>
-    <button className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
-      <Mic className="w-5 h-5" />
+    <button className="p-1 sm:p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
+      <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
     </button>
     <button
       onClick={onSendMessage}
       disabled={!message.trim() || isLoading}
-      className={`p-2 rounded-lg transition-colors ${message.trim() && !isLoading
+      className={`p-1 sm:p-2 rounded-lg transition-colors ${message.trim() && !isLoading
         ? 'bg-green-500 hover:bg-green-600 text-white'
         : 'bg-gray-700 text-gray-400 cursor-not-allowed'
         }`}
     >
       {isLoading ? (
-        <Loader2 className="w-5 h-5 animate-spin" />
+        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
       ) : (
-        <Send className="w-5 h-5" />
+          <Send className="w-4 h-4 sm:w-5 sm:h-5" />
       )}
     </button>
   </div>
 );
 
-
-// Input Area Component
+// Input Area Component - Updated for mobile
 const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendMessage, isLoading, selectedModels }) => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
@@ -389,16 +413,16 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
 
   const getPlaceholder = () => {
     if (selectedModels.length === 0) {
-      return "Select one or more models above to get started...";
+      return "Select models to get started...";
     } else if (selectedModels.length === 1) {
       return `Ask ${selectedModels[0]} anything...`;
     } else {
-      return `Ask ${selectedModels.length} models anything to compare responses...`;
+      return `Ask ${selectedModels.length} models anything...`;
     }
   };
 
   return (
-    <div className="border-t border-gray-700 p-4">
+    <div className="border-t border-gray-700 p-3 sm:p-4">
       <div className="max-w-6xl mx-auto">
         <div className="relative">
           <textarea
@@ -407,9 +431,9 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
             onKeyPress={handleKeyPress}
             placeholder={getPlaceholder()}
             disabled={isLoading || selectedModels.length === 0}
-            className="w-full bg-gray-800 border border-gray-600 rounded-xl p-4 pr-32 text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+            className="w-full bg-gray-800 border border-gray-600 rounded-xl p-3 sm:p-4 pr-24 sm:pr-32 text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 text-sm sm:text-base"
             rows={1}
-            style={{ minHeight: '56px', maxHeight: '200px' }}
+            style={{ minHeight: '48px', maxHeight: '120px' }}
           />
           <InputControls message={message} onSendMessage={onSendMessage} isLoading={isLoading} />
         </div>
@@ -454,6 +478,8 @@ const AIFiestaClone: React.FC = () => {
       selected: true
     }
   ]);
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const apiService = new ApiService();
   const selectedModels = models.filter(m => m.selected && m.enabled).map(m => m.id);
@@ -572,7 +598,6 @@ const AIFiestaClone: React.FC = () => {
         });
 
       } catch (error) {
-        console.error('Error sending multi-message:', error);
         addApiLog(`Unexpected error in multi-query: ${error}`);
 
         // Update with error states
@@ -609,23 +634,22 @@ const AIFiestaClone: React.FC = () => {
     addApiLog('Started new chat session');
   };
 
-  const userMessageCount = messages.filter(msg => msg.role === 'user').length;
 
+  const [isOpen, setIsOpen] = useState(false);
+  const userMessageCount = messages.filter(msg => msg.role === 'user').length;
   return (
     <div className="flex h-screen bg-gray-900 text-white">
       <Sidebar
         models={models}
         messageCount={userMessageCount}
-        onNewChat={handleNewChat}
-      />
-
-      <div className="flex-1 flex flex-col">
+        onNewChat={handleNewChat} isOpen={isOpen} setIsOpen={setIsOpen} />
+      <div className="flex-1 flex flex-col min-w-0">
         <TopBar
           models={models}
           onModelToggleSelect={handleModelToggleSelect}
           onToggleModel={handleToggleModel}
+          onMenuClick={() => setIsOpen(!isOpen)}
         />
-
         <ChatArea
           messages={messages}
           isLoading={isLoading}
