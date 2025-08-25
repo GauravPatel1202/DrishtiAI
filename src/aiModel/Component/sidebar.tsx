@@ -4,11 +4,16 @@ import type { SidebarProps } from "../../lib/type";
 import { useMemo } from "react";
 import { MAX_LIMITS } from "../../lib/config";
 
-export const Sidebar: React.FC<SidebarProps & { messageCount: number; onNewChat: () => void; isOpen: boolean, setIsOpen: (val: boolean) => void }> = ({
+export const Sidebar: React.FC<SidebarProps & {
+  messageCount: number; onNewChat: () => void; isOpen: boolean, setIsOpen: (val: boolean) => void, onOpenSettings: () => void;
+  onOpenUpgrade: () => void;
+}> = ({
   isOpen = false,
   messageCount,
   onNewChat,
-  setIsOpen
+  setIsOpen,
+  onOpenUpgrade,
+  onOpenSettings
 }) => {
   return (
     <>
@@ -46,8 +51,14 @@ export const Sidebar: React.FC<SidebarProps & { messageCount: number; onNewChat:
         <div className="flex-1"></div>
         <div className="p-4 border-t border-gray-700">
           <PlanInfo messageCount={messageCount} />
-          <UpgradeButton />
-          <SettingsButton />
+          <button onClick={onOpenUpgrade} className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 rounded-lg p-2.5 flex items-center justify-center space-x-2 transition-all">
+            <Zap className="w-4 h-4" />
+            <span className="text-sm font-medium">Upgrade Plan</span>
+          </button>
+          <button onClick={onOpenSettings} className="w-full mt-2 text-gray-400 hover:text-white flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-700 transition-colors">
+            <Settings className="w-4 h-4" />
+            <span className="text-sm">Settings</span>
+          </button>
         </div>
       </div>
     </>
@@ -98,16 +109,3 @@ const PlanInfo: React.FC<{ messageCount: number }> = ({ messageCount }) => {
 );
 }
 
-const UpgradeButton: React.FC = () => (
-  <button className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 rounded-lg p-2.5 flex items-center justify-center space-x-2 transition-all">
-    <Zap className="w-4 h-4" />
-    <span className="text-sm font-medium">Upgrade Plan</span>
-  </button>
-);
-
-const SettingsButton: React.FC = () => (
-  <button className="w-full mt-2 text-gray-400 hover:text-white flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-700 transition-colors">
-    <Settings className="w-4 h-4" />
-    <span className="text-sm">Settings</span>
-  </button>
-);

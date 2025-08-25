@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  MessageSquare,
   Send,
   Image,
   Upload,
@@ -10,10 +9,12 @@ import {
   Loader2,
   Check,
   Users,
-  Menu
+  Menu,
+  Sun,
+  Moon,
+  X
 } from 'lucide-react';
 import type { AIModel, ApiResponse, Message } from '../lib/type';
-import clsx from 'clsx';
 import { Logo } from '../components/logo';
 import { Sidebar } from './Component/sidebar';
 
@@ -37,16 +38,18 @@ interface InputAreaProps {
 }
 
 // API Service
+
+const providerMapping: { [key: string]: string } = {
+  'chatgpt': 'openai',
+  'gemini': 'gemini',
+  'deepseek': 'deepseek',
+  'perplexity': 'mistral',
+};
 class ApiService {
   private baseUrl = 'http://localhost:3001/api/queries';
 
   async sendQuery(query: string, model: string): Promise<ApiResponse> {
-    const providerMapping: { [key: string]: string } = {
-      'chatgpt': 'openai',
-      'gemini': 'gemini',
-      'deepseek': 'deepseek',
-      'perplexity': 'mistral',
-    };
+
 
     const provider = providerMapping[model] || 'openai';
 
@@ -163,17 +166,17 @@ const ModelToggle: React.FC<{
 );
 
 // Top Bar Component - Updated for mobile
-const TopBar: React.FC<TopBarProps> = ({ models, onModelToggleSelect, onToggleModel, onMenuClick }) => {
+const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   const [showModels, setShowModels] = useState(false);
 
   return (
-    <div className="border-b border-gray-700 p-3 sm:p-4">
+    <div className="border-b border-gray-700">
       <div className="max-w-6xl mx-auto">
         {/* Mobile header */}
         <div className="lg:hidden flex items-center justify-between mb-3">
           <button
             onClick={onMenuClick}
-            className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700"
+            className="p-2 rounded-md text-gray-600 hover:text-white hover:bg-gray-700"
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -184,20 +187,6 @@ const TopBar: React.FC<TopBarProps> = ({ models, onModelToggleSelect, onToggleMo
           >
             <Users className="w-5 h-5" />
           </button>
-        </div>
-
-        {/* Models section - always visible on desktop, toggleable on mobile */}
-        <div className={`${showModels ? 'block' : 'hidden'} lg:block`}>
-          <div className="flex flex-wrap gap-2">
-            {models.map((model) => (
-              <ModelToggle
-                key={model.id}
-                model={model}
-                onToggleSelect={() => onModelToggleSelect(model.id)}
-                onToggle={() => onToggleModel(model.id)}
-              />
-            ))}
-          </div>
         </div>
       </div>
     </div>
@@ -219,7 +208,7 @@ const MultiResponseMessage: React.FC<{ message: Message }> = ({ message }) => {
         </span>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
         {message.responses.map((response, index) => (
           <div key={index} className="bg-gray-700 rounded-lg p-4 border-l-4 border-gray-600">
             <div className="flex items-center space-x-2 mb-2">
@@ -232,7 +221,7 @@ const MultiResponseMessage: React.FC<{ message: Message }> = ({ message }) => {
             ) : response.loading ? (
               <p className="text-gray-400 text-sm">Thinking...</p>
             ) : (
-              <p className="text-gray-100 text-sm whitespace-pre-wrap">{response.content}</p>
+                  <p className="text-gray-100 text-sm whitespace-pre-wrap break-all">{response.content}</p>
             )}
           </div>
         ))}
@@ -280,95 +269,84 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
   );
 };
 
-// Loading Component - Updated for mobile
-const LoadingMessage: React.FC<{ selectedModels: string[] }> = ({ selectedModels }) => (
-  <div className="mb-6">
-    <div className="flex items-center space-x-2 mb-3">
-      <Users className="w-5 h-5 text-blue-400" />
-      <span className="text-sm text-gray-400">
-        Getting responses from {selectedModels.length} models...
-      </span>
-    </div>
-
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
-      {selectedModels.map((model, index) => (
-        <div key={index} className="bg-gray-700 rounded-lg p-4 border-l-4 border-blue-500">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-            <span className="text-sm font-medium text-orange-400">{model}</span>
-            <Loader2 className="w-3 h-3 animate-spin text-blue-400" />
-          </div>
-          <p className="text-gray-400 text-sm">Thinking...</p>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
 // Welcome Message Component - Updated for mobile
-const WelcomeMessage: React.FC = () => (
-  <div className="text-center max-w-md px-4">
-    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl flex items-center justify-center mb-4 mx-auto">
-      <MessageSquare className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-    </div>
-    <h2 className="text-xl sm:text-2xl font-bold mb-2">Welcome to AI Fiesta</h2>
-    <p className="text-gray-400 text-sm sm:text-base mb-6">Select one or more AI models above and ask anything to compare their responses side by side.</p>
-  </div>
-);
 
-// Chat Area Component - Updated for mobile
 const ChatArea: React.FC<ChatAreaProps> = ({ messages, isLoading, selectedModels }) => {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading, selectedModels]);
-
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="flex-1 overflow-y-auto p-3 sm:p-4">
-        {selectedModels.length === 0 ? (
-          <div className="flex-1 flex flex-col justify-center items-center">
-            <WelcomeMessage />
+    <div className="flex flex-col h-screen w-full mx-auto bg-gray-900 text-gray-100 shadow-xl overflow-hidden">
+      {selectedModels.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-850">
+          <div className="text-center max-w-md">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+            <h3 className="text-xl font-semibold text-gray-300 mb-2">No AI Models Selected</h3>
+            <p className="text-gray-500">Select at least one AI model from the options above to start chatting.</p>
           </div>
-        ) : (
-            <div className="flex flex-col lg:flex-row mx-auto flex-1 h-full gap-4 lg:gap-8">
-              {selectedModels.map((selectModels: string, index: number) => {
-                let isLast = index === selectedModels.length - 1;
-                return (
-                  <div
-                    key={selectModels}
-                    className={clsx('flex-col px-2 sm:px-4 flex-1', {
-                      "lg:border-r lg:border-gray-700": !isLast
-                    })}
-                  >
-                  {messages.map((message) => (
-                    <MessageBubble
-                      key={message.id}
-                      message={
-                        message.isMultiResponse
-                          ? {
-                            ...message,
-                            responses: message.responses?.filter((res) => res.model === selectModels) ?? []
-                          }
-                          : message
-                      }
-                    />
-                  ))}
-                  {isLoading && selectedModels.length > 1 && (
-                    <LoadingMessage selectedModels={selectedModels} />
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-                );
-              })}
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+          <div
+            className="flex-1 flex overflow-x-auto  w-full scroll-smooth bg-gray-850 scrollbar-hide"
+          >
+            {selectedModels.map((model, index) => (
+              <div
+                key={model}
+                className={`flex flex-col h-full min-w-0
+    w-full flex-shrink-0
+    md:flex-1 md:min-w-1/4 md:w-[calc(100%/${selectedModels.length})]
+    ${index < selectedModels.length - 1 ? "border-r border-gray-700" : ""}
+  `}
+              >
+                <ChatAreaMassage messages={messages}
+                  isLoading={isLoading}
+                  selectedModels={selectedModels}
+                  model={model} />
+              </div>
+            ))}
+        </div>
+
+      )}
     </div>
   );
 };
 
+interface ChatAreaMassageProps {
+  messages: Message[];
+  isLoading: boolean;
+  selectedModels: string[];
+  model: string;
+}
+const ChatAreaMassage: React.FC<ChatAreaMassageProps> = ({ messages, isLoading, selectedModels, model }) => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoading, selectedModels]);
+  return <>
+    <div className="sticky top-0 bg-gray-800 py-2 px-4 flex items-center z-10">
+      <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+      <span className="font-medium">{model}</span>
+    </div>
+    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <>
+        {messages.map((message) => (
+          <MessageBubble
+            key={message.id}
+            message={
+              message.isMultiResponse
+                ? {
+                  ...message,
+                  responses: message.responses?.filter((res) => res.model === model) ?? []
+                }
+                : message
+            }
+          />
+        ))}
+      </>
+      <div ref={messagesEndRef} />
+    </div>
+  </>
+
+}
 // Input Controls Component - Updated for mobile
 const InputControls: React.FC<{
   message: string;
@@ -478,9 +456,6 @@ const AIFiestaClone: React.FC = () => {
       selected: true
     }
   ]);
-
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
   const apiService = new ApiService();
   const selectedModels = models.filter(m => m.selected && m.enabled).map(m => m.id);
 
@@ -633,16 +608,29 @@ const AIFiestaClone: React.FC = () => {
     setMessage('');
     addApiLog('Started new chat session');
   };
-
-
   const [isOpen, setIsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isUpgradePlanOpen, setIsUpgradePlanOpen] = useState(false);
+  const [theme, setTheme] = useState('dark');
+
+  const handleModelToggle = (modelId: string) => {
+    setModels(prev => prev.map(model =>
+      model.id === modelId ? { ...model, selected: !model.selected } : model
+    ));
+  };
+
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme);
+    // You could also persist this to localStorage
+  };
   const userMessageCount = messages.filter(msg => msg.role === 'user').length;
   return (
     <div className="flex h-screen bg-gray-900 text-white">
       <Sidebar
         models={models}
         messageCount={userMessageCount}
-        onNewChat={handleNewChat} isOpen={isOpen} setIsOpen={setIsOpen} />
+        onNewChat={handleNewChat} isOpen={isOpen} setIsOpen={setIsOpen}
+        onOpenSettings={() => setIsSettingsOpen(pro => !pro)} onOpenUpgrade={() => setIsUpgradePlanOpen(pro => !pro)} />
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar
           models={models}
@@ -650,12 +638,9 @@ const AIFiestaClone: React.FC = () => {
           onToggleModel={handleToggleModel}
           onMenuClick={() => setIsOpen(!isOpen)}
         />
-        <ChatArea
-          messages={messages}
+        <ChatArea messages={messages}
           isLoading={isLoading}
-          selectedModels={selectedModels}
-        />
-
+          selectedModels={selectedModels} />
         <InputArea
           message={message}
           onMessageChange={setMessage}
@@ -663,9 +648,188 @@ const AIFiestaClone: React.FC = () => {
           isLoading={isLoading}
           selectedModels={selectedModels}
         />
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          selectedModels={selectedModels}
+          onModelToggle={handleModelToggle}
+          theme={theme}
+          onThemeChange={handleThemeChange}
+        />
+
+        <UpgradePlanModal
+          isOpen={isUpgradePlanOpen}
+          onClose={() => setIsUpgradePlanOpen(false)}
+        />
       </div>
     </div>
   );
 };
 
 export default AIFiestaClone;
+
+
+const UpgradePlanModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+}> = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  const plans = [
+    {
+      name: "Free",
+      price: "$0",
+      features: ["3 AI models", "Basic responses", "Standard speed", "5 requests per hour"]
+    },
+    {
+      name: "Pro",
+      price: "$15",
+      period: "/month",
+      features: ["All AI models", "Advanced responses", "Faster speed", "Unlimited requests", "Priority support"]
+    },
+    {
+      name: "Enterprise",
+      price: "Custom",
+      features: ["All AI models", "Custom integrations", "Highest speed", "Unlimited requests", "Dedicated support", "API access"]
+    }
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 border-b border-gray-700 sticky top-0 bg-gray-800">
+          <h2 className="text-xl font-semibold">Upgrade Your Plan</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-4 md:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+            {plans.map((plan, index) => (
+              <div
+                key={plan.name}
+                className={`bg-gray-700 rounded-lg p-4 md:p-6 ${index === 1 ? 'ring-2 ring-blue-500 md:transform md:scale-105' : ''
+                  }`}
+              >
+                <h3 className="text-lg md:text-xl font-semibold mb-2">{plan.name}</h3>
+                <div className="mb-3 md:mb-4">
+                  <span className="text-2xl md:text-3xl font-bold">{plan.price}</span>
+                  {plan.period && <span className="text-gray-400 text-sm md:text-base">{plan.period}</span>}
+                </div>
+                <ul className="space-y-1 md:space-y-2 mb-4 md:mb-6">
+                  {plan.features.map((feature, i) => (
+                    <li key={i} className="flex items-start">
+                      <Check className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <span className="text-xs md:text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  className={`w-full py-2 rounded-lg font-medium text-sm md:text-base ${index === 1
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
+                    }`}
+                >
+                  {index === 0 ? 'Current Plan' : 'Upgrade Now'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-gray-700 text-center text-xs md:text-sm text-gray-400">
+          Need help choosing a plan? <a href="#" className="text-blue-400 hover:underline">Contact us</a>
+        </div>
+      </div>
+    </div>
+  );
+  };
+const SettingsModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  selectedModels: string[];
+  onModelToggle: (modelId: string) => void;
+  theme: string;
+  onThemeChange: (theme: string) => void;
+}> = ({ isOpen, onClose, selectedModels, onModelToggle, theme, onThemeChange }) => {
+  if (!isOpen) return null;
+
+  const availableModels = [
+    { id: 'chatgpt', name: 'OpenAI GPT-3.5' },
+    { id: 'gemini', name: 'Gemini 1.5 Flash' },
+    { id: 'deepseek', name: 'DeepSeek Chat' },
+    { id: 'perplexity', name: 'Mistral Large' }
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 border-b border-gray-700 sticky top-0 bg-gray-800">
+          <h2 className="text-xl font-semibold">Settings</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-4 space-y-6">
+          {/* Theme Selection */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-300 mb-3">Theme</h3>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => onThemeChange('light')}
+                className={`flex items-center justify-center px-3 py-2 md:px-4 md:py-2 rounded-lg border text-sm md:text-base ${theme === 'light'
+                  ? 'bg-blue-600 border-blue-500 text-white'
+                  : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                  }`}
+              >
+                <Sun className="w-4 h-4 mr-1 md:mr-2" />
+                Light
+              </button>
+              <button
+                onClick={() => onThemeChange('dark')}
+                className={`flex items-center justify-center px-3 py-2 md:px-4 md:py-2 rounded-lg border text-sm md:text-base ${theme === 'dark'
+                  ? 'bg-blue-600 border-blue-500 text-white'
+                  : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                  }`}
+              >
+                <Moon className="w-4 h-4 mr-1 md:mr-2" />
+                Dark
+              </button>
+            </div>
+          </div>
+
+          {/* Model Selection */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-300 mb-3">AI Models</h3>
+            <div className="space-y-2">
+              {availableModels.map(model => (
+                <div key={model.id} className="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+                  <span className="text-sm md:text-base">{model.name}</span>
+                  <button
+                    onClick={() => onModelToggle(model.id)}
+                    className={`w-8 h-4 rounded-full relative transition-colors ${selectedModels.includes(model.id) ? 'bg-green-500' : 'bg-gray-500'
+                      }`}
+                  >
+                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${selectedModels.includes(model.id) ? 'translate-x-4' : 'translate-x-0.5'
+                      }`}></div>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-gray-700 flex justify-end sticky bottom-0 bg-gray-800">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm md:text-base"
+          >
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
