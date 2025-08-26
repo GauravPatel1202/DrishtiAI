@@ -46,7 +46,7 @@ const providerMapping: { [key: string]: string } = {
   'perplexity': 'mistral',
 };
 class ApiService {
-  private baseUrl = 'http://localhost:3001/api/queries';
+  private baseUrl = 'http://13.203.107.146:3001/api/queries';
 
   async sendQuery(query: string, model: string): Promise<ApiResponse> {
 
