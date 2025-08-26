@@ -695,7 +695,7 @@ const UpgradePlanModal: React.FC<{
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-gray-900/80 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-gray-700 sticky top-0 bg-gray-800">
           <h2 className="text-xl font-semibold">Upgrade Your Plan</h2>
@@ -763,7 +763,7 @@ const SettingsModal: React.FC<{
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-gray-900/80  flex items-center justify-center z-50 p-4">
       <div className="bg-gray-800 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-gray-700 sticky top-0 bg-gray-800">
           <h2 className="text-xl font-semibold">Settings</h2>
