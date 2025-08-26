@@ -3,7 +3,7 @@ import React from 'react';
 
 const ModelSection: React.FC = () => {
   return (
-    <section className="model-section" id="models">
+    <section className="model-section bg-gradient-to-br from-[rgba(124,92,255,0.15)] to-[rgba(0,209,255,0.1)] mt-16 animate-[fadeUp_1s_ease]" id="models">
       <div className="container">
         <h2>Pick the Best Characteristics of Each AI Model</h2>
         <div className="model-grid">

@@ -3,7 +3,7 @@ import React from 'react';
 
 const FAQ: React.FC = () => {
   return (
-    <section className="faq" id="faq">
+    <section className="faq bg-gradient-to-br from-[rgba(124,92,255,0.15)] to-[rgba(0,209,255,0.1)] animate-[fadeUp_1s_ease]" id="faq">
       <h2>Frequently Asked Questions</h2>
       <div className="faq-grid">
         <details>

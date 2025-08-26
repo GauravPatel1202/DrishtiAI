@@ -3,7 +3,7 @@ import React from 'react';
 
 const AIShowcase: React.FC = () => {
   return (
-    <section className="ai-showcase" id="ai-showcase">
+    <section className="ai-showcase " id="ai-showcase">
       <div className="container">
         <h2 className="section-title">Pick the Best Characteristics of Each AI Model</h2>
         <div className="ai-grid">

@@ -14,8 +14,8 @@ const LandingPage: React.FC = () => {
       <Header />
       <Hero />
       <CTABanner />
-      <ModelSection />
       <AIShowcase />
+      <ModelSection />
       <YoutubeDonationAboutSection />
       <FAQ />
       <Footer />
