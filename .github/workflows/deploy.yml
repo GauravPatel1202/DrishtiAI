@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted   # ✅ use GitHub-hosted runner
+    runs-on: ubuntu-latest  # ✅ use GitHub-hosted runner
 
     steps:
       - name: Checkout code
