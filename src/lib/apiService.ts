@@ -4,9 +4,6 @@ export interface WACApiClient {
   sendQuery(query: string, model: string): Promise<ApiResponse>;
 }
 
-const REACT_APP_HOST = import.meta.env.VITE_REACT_APP_HOST || 'http://localhost:3001'; 
-debugger// fallback for dev
-
 export const PATHS = Object.freeze({
   QUERIES: () =>
     `/api/queries/query`,

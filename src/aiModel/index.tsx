@@ -133,38 +133,6 @@ class ApiService {
   }
 }
 
-// Model Toggle Component - Updated for mobile
-const ModelToggle: React.FC<{
-  model: AIModel;
-  onToggleSelect: () => void;
-  onToggle: () => void;
-}> = ({ model, onToggleSelect, onToggle }) => (
-  <div className="flex items-center space-x-2">
-    <button
-      onClick={onToggleSelect}
-      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all border-2 ${model.selected
-        ? 'bg-blue-600 text-white shadow-md border-blue-400'
-        : 'bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600 border-gray-600'
-        }`}
-    >
-      {model.selected && <Check className="w-3 h-3 inline mr-1" />}
-      <span className="hidden sm:inline">{model.name}</span>
-      <span className="sm:hidden">{model.name.split(' ')[0]}</span>
-    </button>
-    <div className="flex items-center space-x-1">
-      <button
-        onClick={onToggle}
-        className={`w-8 h-4 rounded-full relative transition-colors ${model.enabled ? 'bg-green-500' : 'bg-gray-500'
-          }`}
-        title={model.enabled ? 'Enabled' : 'Disabled'}
-      >
-        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${model.enabled ? 'translate-x-4' : 'translate-x-0.5'
-          }`}></div>
-      </button>
-    </div>
-  </div>
-);
-
 // Top Bar Component - Updated for mobile
 const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   const [showModels, setShowModels] = useState(false);
