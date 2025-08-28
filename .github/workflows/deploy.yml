@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted  # ✅ use GitHub-hosted runner
+    runs-on: ubuntu-latest  # ✅ use GitHub-hosted runner
 
     steps:
       - name: Checkout code
@@ -19,6 +19,7 @@ jobs:
           node-version: '18'
 
       - name: Deploy to AWS server via SSH
+        if: always() 
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.AWS_HOST }}
