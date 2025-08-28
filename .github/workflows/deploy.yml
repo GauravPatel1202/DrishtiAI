@@ -18,16 +18,6 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Test SSH connection
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.AWS_HOST }}
-          username: ${{ secrets.AWS_USER }}
-          key: ${{ secrets.AWS_SSH_KEY }}
-          script: |
-            echo "✅ Connected as $(whoami) on $(hostname)"
-            uptime
-
       - name: Deploy to AWS server via SSH
         uses: appleboy/ssh-action@v0.1.10
         with:
