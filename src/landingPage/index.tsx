@@ -18,7 +18,6 @@ const LandingPage: React.FC = () => {
       <ModelSection />
       <YoutubeDonationAboutSection />
       <FAQ />
-      hi
       <Footer />
     </div>
   );
