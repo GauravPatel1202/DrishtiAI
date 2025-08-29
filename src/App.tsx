@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './landingPage';
-import AIFiestaClone from './aiModel';
+import AI from './ai';
 import { IntlProvider } from 'react-intl/index';
 import enMessages from './translations/en.json';
 
@@ -12,7 +12,7 @@ const App: React.FC = () => {
     <IntlProvider locale={locale} messages={messages}>
       <Router>
         <Routes>
-          <Route path="/ai-app" element={<AIFiestaClone />} />
+          <Route path="/ai-app" element={<AI />} />
           <Route path="/" element={<LandingPage />} />
         </Routes>
       </Router>
