@@ -28,6 +28,6 @@ jobs:
           script: |
             cd /home/${{ secrets.AWS_USER }}/DrishtiAI
             git pull origin main
-            npm install --production
+            npm install
             pm2 start npm --name "DrishtiAI" -- start || pm2 restart DrishtiAI
             pm2 save
