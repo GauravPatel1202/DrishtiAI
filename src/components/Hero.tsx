@@ -31,12 +31,6 @@ const Hero: React.FC = () => {
                       >
                           Start free
                       </a>
-                      <a
-                          className="btn btn-ghost py-3 px-6 rounded-xl font-semibold cursor-pointer transition-all duration-300 border border-[rgba(255,255,255,0.16)] text-[#e6e8ee] hover:bg-[rgba(255,255,255,0.08)]"
-                          href="#features"
-                      >
-                          See features
-                      </a>
                   </div>
               </div>
 

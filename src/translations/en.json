@@ -80,7 +80,7 @@
     
     "react.donate": "Donate",
     "react.sign_up": "Sign up",
-    "react.copyright": "© 2025 LuminaAI (DrishtiAI). All rights reserved.",
+    "react.copyright": "© {year} LuminaAI (DrishtiAI). All rights reserved.",
     "react.new_chat": "New Chat",
     "react.projects": "Projects",
     "react.free_plan": "Free Plan",

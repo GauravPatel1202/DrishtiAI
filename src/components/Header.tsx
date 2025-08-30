@@ -26,15 +26,21 @@ const Header: React.FC = () => {
         </div>
 
         <nav className="navlinks flex gap-4 items-center">
-          <a className="navlinksHide py-2 px-3 rounded-lg text-[#a5afc7] hover:bg-[rgba(255,255,255,0.06)] hover:text-[#e6e8ee] transition-colors duration-300" href="#features">{intl.formatMessage({
-            id: I18nKey.FEATURES,
+          <a className="navlinksHide py-2 px-3 rounded-lg text-[#a5afc7] hover:bg-[rgba(255,255,255,0.06)] hover:text-[#e6e8ee] transition-colors duration-300" href="#pricing">{intl.formatMessage({
+            id: I18nKey.PRICING,
           })}</a>
-          <a className="navlinksHide py-2 px-3 rounded-lg text-[#a5afc7] hover:bg-[rgba(255,255,255,0.06)] hover:text-[#e6e8ee] transition-colors duration-300" href="#use-cases">Use cases</a>
-          <a className="navlinksHide py-2 px-3 rounded-lg text-[#a5afc7] hover:bg-[rgba(255,255,255,0.06)] hover:text-[#e6e8ee] transition-colors duration-300" href="#pricing">Pricing</a>
-          <a className="navlinksHide py-2 px-3 rounded-lg text-[#a5afc7] hover:bg-[rgba(255,255,255,0.06)] hover:text-[#e6e8ee] transition-colors duration-300" href="#about">About</a>
-          <a className="navlinksHide py-2 px-3 rounded-lg text-[#a5afc7] hover:bg-[rgba(255,255,255,0.06)] hover:text-[#e6e8ee] transition-colors duration-300" href="#faq">FAQ</a>
-          <a className="btn btn-ghost py-3 px-4 rounded-xl font-semibold cursor-pointer transition-all duration-300 border border-[rgba(255,255,255,0.16)] text-[#e6e8ee] hover:bg-[rgba(255,255,255,0.08)]" href="#signup">Sign in</a>
-          <a className="btn btn-primary py-3 px-4 rounded-xl font-semibold cursor-pointer transition-all duration-300 bg-gradient-to-br from-[#7c5cff] to-[#00d1ff] text-[#0b0d10] shadow-lg shadow-[rgba(124,92,255,0.25)] hover:translate-y-[-3px] hover:scale-105 hover:shadow-xl hover:shadow-[rgba(124,92,255,0.4)]" onClick={getstarted}>Get started</a>
+          <a className="navlinksHide py-2 px-3 rounded-lg text-[#a5afc7] hover:bg-[rgba(255,255,255,0.06)] hover:text-[#e6e8ee] transition-colors duration-300" href="#about">{intl.formatMessage({
+            id: I18nKey.ABOUT,
+          })}</a>
+          <a className="navlinksHide py-2 px-3 rounded-lg text-[#a5afc7] hover:bg-[rgba(255,255,255,0.06)] hover:text-[#e6e8ee] transition-colors duration-300" href="#faq">{intl.formatMessage({
+            id: I18nKey.FAQ,
+          })}</a>
+          <a className="btn btn-ghost py-3 px-4 rounded-xl font-semibold cursor-pointer transition-all duration-300 border border-[rgba(255,255,255,0.16)] text-[#e6e8ee] hover:bg-[rgba(255,255,255,0.08)]" href="#signup">{intl.formatMessage({
+            id: I18nKey.SIGN_IN,
+          })}</a>
+          <a className="btn btn-primary py-3 px-4 rounded-xl font-semibold cursor-pointer transition-all duration-300 bg-gradient-to-br from-[#7c5cff] to-[#00d1ff] text-[#0b0d10] shadow-lg shadow-[rgba(124,92,255,0.25)] hover:translate-y-[-3px] hover:scale-105 hover:shadow-xl hover:shadow-[rgba(124,92,255,0.4)]" onClick={getstarted}>{intl.formatMessage({
+            id: I18nKey.GET_STARTED,
+          })}</a>
         </nav>
       </div>
     </header>
