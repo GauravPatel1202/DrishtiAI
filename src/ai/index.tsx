@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext, createContext } from 'react';
 import {
   Send,
   Image,
@@ -15,8 +15,9 @@ import {
 import type { AIModel, ApiResponse, Message } from '../lib/type';
 import { Logo } from '../components/logo';
 import { Sidebar } from './Component/sidebar';
-import { Route, Routes, useNavigate } from 'react-router-dom';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import ProfileSettings from './profileSettings';
+import { useAuth } from '../AuthContext';
 
 interface TopBarProps {
   models: AIModel[];
@@ -595,7 +596,8 @@ const AIFiestaClone: React.FC = () => {
 
         <Routes>
           <Route path="/profile" element={<ProfileSettings />} />
-          <Route path="/ai-app" element={<> <TopBar
+          <Route path="/ai-app" element={<>
+            <TopBar
             models={models}
             onModelToggleSelect={handleModelToggleSelect}
             onToggleModel={handleToggleModel}
@@ -610,7 +612,8 @@ const AIFiestaClone: React.FC = () => {
               onSendMessage={handleSendMessage}
               isLoading={isLoading}
               selectedModels={selectedModels}
-            /></>} />
+            /></>}
+          />
         </Routes>
 
         <UpgradePlanModal
@@ -701,3 +704,25 @@ const UpgradePlanModal: React.FC<{
     </div>
   );
   };
+
+
+
+export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+      </div>
+    );
+  }
+  return user ? <>{children}</> : <Navigate to="/login" replace />;
+};
+
+
+
+
+
