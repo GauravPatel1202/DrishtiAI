@@ -18,7 +18,7 @@ const Login: React.FC = () => {
     
     const success = await login(email, password);
     if (success) {
-      navigate('/app/chat');
+      navigate('/app/ai-app');
     } else {
       setError('Failed to log in');
     }
