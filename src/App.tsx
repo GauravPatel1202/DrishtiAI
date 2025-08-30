@@ -1,7 +1,7 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LandingPage from './landingPage';
-import AI, { ProtectedRoute } from './ai';
+import { ProtectedRoute } from './ai';
 import { IntlProvider } from 'react-intl/index';
 import enMessages from './translations/en.json';
 import Login from './modules/login/login';
