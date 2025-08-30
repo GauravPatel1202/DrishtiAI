@@ -33,7 +33,7 @@ const YoutubeDonationAboutSection = () => {
               </ul>
 
               <a
-                href="https://youtube.com/@LuminaAI"
+                href="https://www.youtube.com/@UncensoredMic"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center bg-gradient-to-br from-[#7c5cff] to-[#00d1ff] hover:from-[#6a4ce6] hover:to-[#00b8e6] text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl hover:shadow-[#7c5cff]/30"
