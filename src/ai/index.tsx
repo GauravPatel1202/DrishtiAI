@@ -17,6 +17,8 @@ import {
 import type { AIModel, ApiResponse, Message } from '../lib/type';
 import { Logo } from '../components/logo';
 import { Sidebar } from './Component/sidebar';
+import { Route, Router, Routes, useNavigate } from 'react-router-dom';
+import ProfileSettings from '../profileSettings';
 
 interface TopBarProps {
   models: AIModel[];
@@ -577,20 +579,12 @@ const AIFiestaClone: React.FC = () => {
     addApiLog('Started new chat session');
   };
   const [isOpen, setIsOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isUpgradePlanOpen, setIsUpgradePlanOpen] = useState(false);
-  const [theme, setTheme] = useState('dark');
+  const navigate = useNavigate();
 
-  const handleModelToggle = (modelId: string) => {
-    setModels(prev => prev.map(model =>
-      model.id === modelId ? { ...model, selected: !model.selected } : model
-    ));
-  };
-
-  const handleThemeChange = (newTheme: string) => {
-    setTheme(newTheme);
-    // You could also persist this to localStorage
-  };
+  const setIsSettingsOpen = () => {
+    navigate('/app/profile');
+  }
   const userMessageCount = messages.filter(msg => msg.role === 'user').length;
   return (
     <div className="flex h-screen bg-gray-900 text-white">
@@ -598,32 +592,28 @@ const AIFiestaClone: React.FC = () => {
         models={models}
         messageCount={userMessageCount}
         onNewChat={handleNewChat} isOpen={isOpen} setIsOpen={setIsOpen}
-        onOpenSettings={() => setIsSettingsOpen(pro => !pro)} onOpenUpgrade={() => setIsUpgradePlanOpen(pro => !pro)} />
+        onOpenSettings={() => setIsSettingsOpen()} onOpenUpgrade={() => setIsUpgradePlanOpen(pro => !pro)} />
       <div className="flex-1 flex flex-col min-w-0">
-        <TopBar
-          models={models}
-          onModelToggleSelect={handleModelToggleSelect}
-          onToggleModel={handleToggleModel}
-          onMenuClick={() => setIsOpen(!isOpen)}
-        />
-        <ChatArea messages={messages}
-          isLoading={isLoading}
-          selectedModels={selectedModels} />
-        <InputArea
-          message={message}
-          onMessageChange={setMessage}
-          onSendMessage={handleSendMessage}
-          isLoading={isLoading}
-          selectedModels={selectedModels}
-        />
-        <SettingsModal
-          isOpen={isSettingsOpen}
-          onClose={() => setIsSettingsOpen(false)}
-          selectedModels={selectedModels}
-          onModelToggle={handleModelToggle}
-          theme={theme}
-          onThemeChange={handleThemeChange}
-        />
+
+        <Routes>
+          <Route path="/profile" element={<ProfileSettings />} />
+          <Route path="/ai-app" element={<> <TopBar
+            models={models}
+            onModelToggleSelect={handleModelToggleSelect}
+            onToggleModel={handleToggleModel}
+            onMenuClick={() => setIsOpen(!isOpen)}
+          />
+            <ChatArea messages={messages}
+              isLoading={isLoading}
+              selectedModels={selectedModels} />
+            <InputArea
+              message={message}
+              onMessageChange={setMessage}
+              onSendMessage={handleSendMessage}
+              isLoading={isLoading}
+              selectedModels={selectedModels}
+            /></>} />
+        </Routes>
 
         <UpgradePlanModal
           isOpen={isUpgradePlanOpen}
@@ -713,91 +703,3 @@ const UpgradePlanModal: React.FC<{
     </div>
   );
   };
-const SettingsModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  selectedModels: string[];
-  onModelToggle: (modelId: string) => void;
-  theme: string;
-  onThemeChange: (theme: string) => void;
-}> = ({ isOpen, onClose, selectedModels, onModelToggle, theme, onThemeChange }) => {
-  if (!isOpen) return null;
-
-  const availableModels = [
-    { id: 'chatgpt', name: 'OpenAI GPT-3.5' },
-    { id: 'gemini', name: 'Gemini 1.5 Flash' },
-    { id: 'deepseek', name: 'DeepSeek Chat' },
-    { id: 'perplexity', name: 'Mistral Large' }
-  ];
-
-  return (
-    <div className="fixed inset-0 bg-gray-900/80  flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b border-gray-700 sticky top-0 bg-gray-800">
-          <h2 className="text-xl font-semibold">Settings</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="p-4 space-y-6">
-          {/* Theme Selection */}
-          <div>
-            <h3 className="text-sm font-medium text-gray-300 mb-3">Theme</h3>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => onThemeChange('light')}
-                className={`flex items-center justify-center px-3 py-2 md:px-4 md:py-2 rounded-lg border text-sm md:text-base ${theme === 'light'
-                  ? 'bg-blue-600 border-blue-500 text-white'
-                  : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
-                  }`}
-              >
-                <Sun className="w-4 h-4 mr-1 md:mr-2" />
-                Light
-              </button>
-              <button
-                onClick={() => onThemeChange('dark')}
-                className={`flex items-center justify-center px-3 py-2 md:px-4 md:py-2 rounded-lg border text-sm md:text-base ${theme === 'dark'
-                  ? 'bg-blue-600 border-blue-500 text-white'
-                  : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
-                  }`}
-              >
-                <Moon className="w-4 h-4 mr-1 md:mr-2" />
-                Dark
-              </button>
-            </div>
-          </div>
-
-          {/* Model Selection */}
-          <div>
-            <h3 className="text-sm font-medium text-gray-300 mb-3">AI Models</h3>
-            <div className="space-y-2">
-              {availableModels.map(model => (
-                <div key={model.id} className="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
-                  <span className="text-sm md:text-base">{model.name}</span>
-                  <button
-                    onClick={() => onModelToggle(model.id)}
-                    className={`w-8 h-4 rounded-full relative transition-colors ${selectedModels.includes(model.id) ? 'bg-green-500' : 'bg-gray-500'
-                      }`}
-                  >
-                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${selectedModels.includes(model.id) ? 'translate-x-4' : 'translate-x-0.5'
-                      }`}></div>
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="p-4 border-t border-gray-700 flex justify-end sticky bottom-0 bg-gray-800">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm md:text-base"
-          >
-            Save Changes
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};

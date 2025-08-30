@@ -12,7 +12,7 @@ const App: React.FC = () => {
     <IntlProvider locale={locale} messages={messages}>
       <Router>
         <Routes>
-          <Route path="/ai-app" element={<AI />} />
+          <Route path="/app/*" element={<AI />} />
           <Route path="/" element={<LandingPage />} />
         </Routes>
       </Router>
@@ -21,4 +21,5 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
