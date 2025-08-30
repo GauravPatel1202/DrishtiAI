@@ -2,8 +2,13 @@
 import React from "react";
 import gradientBlob from "../assets/images/gradient-blob.png";
 import aiBrain from "../assets/images/image.png"; 
+import { useNavigate } from "react-router-dom";
 
 const Hero: React.FC = () => {
+    const navigate = useNavigate();
+    const getstarted = () => {
+        navigate('/app/ai-app');
+    }
   return (
       <section className="hero py-16 md:py-24 overflow-hidden">
           <div className="max-w-[1200px] mx-auto px-5 grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr] gap-12 items-center">
@@ -22,7 +27,7 @@ const Hero: React.FC = () => {
                   <div className="cta mt-6 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                       <a
                           className="btn btn-primary py-3 px-6 rounded-xl font-semibold cursor-pointer transition-all duration-300 bg-gradient-to-br from-[#7c5cff] to-[#00d1ff] text-[#0b0d10] shadow-lg shadow-[rgba(124,92,255,0.25)] hover:translate-y-[-3px] hover:scale-105 hover:shadow-xl hover:shadow-[rgba(124,92,255,0.4)]"
-                          href="ai-app"
+                          onClick={getstarted}
                       >
                           Start free
                       </a>

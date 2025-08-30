@@ -10,15 +10,13 @@ import {
   Check,
   Users,
   Menu,
-  Sun,
-  Moon,
   X
 } from 'lucide-react';
 import type { AIModel, ApiResponse, Message } from '../lib/type';
 import { Logo } from '../components/logo';
 import { Sidebar } from './Component/sidebar';
-import { Route, Router, Routes, useNavigate } from 'react-router-dom';
-import ProfileSettings from '../profileSettings';
+import { Route, Routes, useNavigate } from 'react-router-dom';
+import ProfileSettings from './profileSettings';
 
 interface TopBarProps {
   models: AIModel[];
