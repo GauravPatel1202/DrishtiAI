@@ -12,12 +12,13 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import type { AIModel, ApiResponse, Message } from '../lib/type';
+import type { AIModel, Message } from '../lib/type';
 import { Logo } from '../components/logo';
 import { Sidebar } from './Component/sidebar';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import ProfileSettings from './profileSettings';
 import { useAuth } from '../AuthContext';
+import { createApiClient } from '../lib/apiService';
 
 interface TopBarProps {
   models: AIModel[];
@@ -46,93 +47,7 @@ const providerMapping: { [key: string]: string } = {
   'deepseek': 'deepseek',
   'perplexity': 'mistral',
 };
-class ApiService {
-  private baseUrl = 'http://13.203.107.146:3001/api/queries';
 
-  async sendQuery(query: string, model: string): Promise<ApiResponse> {
-
-
-    const provider = providerMapping[model] || 'openai';
-
-    const requestPayload = {
-      prompt: query,
-      providers: [provider]
-    };
-    try {
-      const response = await fetch(`${this.baseUrl}/query`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(requestPayload),
-      });
-      if (!response.ok) {
-        let errorDetails = '';
-        try {
-          const errorBody = await response.text();
-
-          errorDetails = errorBody ? ` - ${errorBody}` : '';
-        } catch (parseError) {
-        }
-
-        throw new Error(`HTTP ${response.status}: ${response.statusText}${errorDetails}`);
-      }
-
-      const data = await response.json();
-      if (data && data.responses && data.responses.length > 0) {
-        const responseData = data.responses[0];
-        return {
-          response: responseData.content,
-          model: responseData.provider
-        };
-      } else {
-        throw new Error('No response data received from server');
-      }
-
-    } catch (error) {
-
-      let errorMessage = `Sorry, I encountered an error while processing your request with ${model}.`;
-
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        errorMessage = `Unable to connect to the server for ${model}. Please check if the API server is running on port 3001.`;
-      } else if (error instanceof Error) {
-        if (error.message.includes('500')) {
-          errorMessage = `Server error with ${provider} provider. Please check your API keys and server logs.`;
-        } else if (error.message.includes('404')) {
-          errorMessage = `API endpoint not found for ${model}. Please ensure the server route is /api/queries/query.`;
-        } else if (error.message.includes('401') || error.message.includes('403')) {
-          errorMessage = `Authentication failed for ${provider}. Please check your API key.`;
-        }
-      }
-
-      return {
-        response: errorMessage + ' Please try again or contact support if the issue persists.',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
-  }
-
-  async sendMultiQuery(query: string, models: string[]): Promise<{ [key: string]: ApiResponse }> {
-    const results: { [key: string]: ApiResponse } = {};
-
-    // Send requests to all models in parallel
-    const promises = models.map(async (model) => {
-      try {
-        const response = await this.sendQuery(query, model);
-        results[model] = response;
-      } catch (error) {
-        results[model] = {
-          response: `Error with ${model}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        };
-      }
-    });
-
-    await Promise.all(promises);
-    return results;
-  }
-}
 
 // Top Bar Component - Updated for mobile
 const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
@@ -347,8 +262,7 @@ const InputControls: React.FC<{
       )}
     </button>
   </div>
-);
-
+  );
 // Input Area Component - Updated for mobile
 const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendMessage, isLoading, selectedModels }) => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -357,7 +271,6 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
       onSendMessage();
     }
   };
-
   const getPlaceholder = () => {
     if (selectedModels.length === 0) {
       return "Select models to get started...";
@@ -394,7 +307,6 @@ const AIFiestaClone: React.FC = () => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [, setApiLogs] = useState<string[]>([]);
   const [models, setModels] = useState<AIModel[]>([
     {
       id: 'chatgpt',
@@ -425,21 +337,14 @@ const AIFiestaClone: React.FC = () => {
       selected: true
     }
   ]);
-  const apiService = new ApiService();
+  const apiService = createApiClient('');
   const selectedModels = models.filter(m => m.selected && m.enabled).map(m => m.id);
-
-  const addApiLog = (log: string) => {
-    const timestamp = new Date().toLocaleTimeString();
-    setApiLogs(prev => [...prev, `[${timestamp}] ${log}`].slice(-20));
-  };
-
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
   const handleModelToggleSelect = (modelId: string) => {
     setModels(prev => prev.map(model =>
       model.id === modelId ? { ...model, selected: !model.selected } : model
     ));
-    addApiLog(`Model ${modelId} ${models.find(m => m.id === modelId)?.selected ? 'deselected' : 'selected'}`);
   };
 
   const handleSendMessage = async () => {
@@ -457,46 +362,7 @@ const AIFiestaClone: React.FC = () => {
     setMessage('');
     setIsLoading(true);
 
-    if (selectedModels.length === 1) {
-      // Single model response
-      addApiLog(`Sending message to ${selectedModels[0]}: "${currentMessage.substring(0, 50)}..."`);
-
-      try {
-        const response = await apiService.sendQuery(currentMessage, selectedModels[0]);
-
-        if (response.error) {
-          addApiLog(`API Error from ${selectedModels[0]}: ${response.error}`);
-        } else {
-          addApiLog(`Received response from ${selectedModels[0]}: "${response.response.substring(0, 50)}..."`);
-        }
-
-        const assistantMessage: Message = {
-          id: generateId(),
-          content: response.response,
-          role: 'assistant',
-          timestamp: new Date(),
-          model: response.model || selectedModels[0],
-        };
-
-        setMessages(prev => [...prev, assistantMessage]);
-      } catch (error) {
-        console.error('Error sending message:', error);
-        addApiLog(`Unexpected error with ${selectedModels[0]}: ${error}`);
-
-        const errorMessage: Message = {
-          id: generateId(),
-          content: 'Sorry, I encountered an unexpected error. Please check the debug panel for details.',
-          role: 'assistant',
-          timestamp: new Date(),
-          model: selectedModels[0],
-        };
-
-        setMessages(prev => [...prev, errorMessage]);
-      }
-    } else {
-      // Multi-model response
-      addApiLog(`Sending message to ${selectedModels.length} models: "${currentMessage.substring(0, 50)}..."`);
-
+    if (selectedModels.length >= 1) {
       // Create initial multi-response message with loading states
       const multiResponseMessage: Message = {
         id: generateId(),
@@ -512,54 +378,19 @@ const AIFiestaClone: React.FC = () => {
       };
 
       setMessages(prev => [...prev, multiResponseMessage]);
-
-      try {
-        const responses = await apiService.sendMultiQuery(currentMessage, selectedModels);
-
-        // Update the message with actual responses
-        setMessages(prev => prev.map(msg => {
-          if (msg.id === multiResponseMessage.id) {
-            return {
-              ...msg,
-              responses: selectedModels.map(model => ({
-                model,
-                content: responses[model]?.response || 'No response received',
-                error: responses[model]?.error,
-                loading: false
-              }))
-            };
-          }
-          return msg;
-        }));
-
-        // Log results
-        Object.entries(responses).forEach(([model, response]) => {
-          if (response.error) {
-            addApiLog(`API Error from ${model}: ${response.error}`);
-          } else {
-            addApiLog(`Received response from ${model}: "${response.response.substring(0, 50)}..."`);
-          }
-        });
-
-      } catch (error) {
-        addApiLog(`Unexpected error in multi-query: ${error}`);
-
-        // Update with error states
-        setMessages(prev => prev.map(msg => {
-          if (msg.id === multiResponseMessage.id) {
-            return {
-              ...msg,
-              responses: selectedModels.map(model => ({
-                model,
-                content: '',
-                error: 'Unexpected error occurred',
-                loading: false
-              }))
-            };
-          }
-          return msg;
-        }));
-      }
+      const responses = await apiService.sendQuery(currentMessage, selectedModels);
+      setMessages(prev => prev.map(msg => {
+        return {
+          ...msg,
+          responses: selectedModels.map(model => {
+            return ({
+              model,
+              content: (responses as unknown as any[])?.filter((res: any) => res.provider === providerMapping[model])?.[0]?.content ?? '',
+              loading: false
+            })
+          })
+        };
+      }));
     }
 
     setIsLoading(false);
@@ -569,13 +400,11 @@ const AIFiestaClone: React.FC = () => {
     setModels(prev => prev.map(model =>
       model.id === modelId ? { ...model, enabled: !model.enabled } : model
     ));
-    addApiLog(`Model ${modelId} ${models.find(m => m.id === modelId)?.enabled ? 'disabled' : 'enabled'}`);
   };
 
   const handleNewChat = () => {
     setMessages([]);
     setMessage('');
-    addApiLog('Started new chat session');
   };
   const [isOpen, setIsOpen] = useState(false);
   const [isUpgradePlanOpen, setIsUpgradePlanOpen] = useState(false);
@@ -598,11 +427,11 @@ const AIFiestaClone: React.FC = () => {
           <Route path="/profile" element={<ProfileSettings />} />
           <Route path="/ai-app" element={<>
             <TopBar
-            models={models}
-            onModelToggleSelect={handleModelToggleSelect}
-            onToggleModel={handleToggleModel}
-            onMenuClick={() => setIsOpen(!isOpen)}
-          />
+              models={models}
+              onModelToggleSelect={handleModelToggleSelect}
+              onToggleModel={handleToggleModel}
+              onMenuClick={() => setIsOpen(!isOpen)}
+            />
             <ChatArea messages={messages}
               isLoading={isLoading}
               selectedModels={selectedModels} />
@@ -719,10 +548,5 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
       </div>
     );
   }
-  return user ? <>{children}</> : <Navigate to="/login" replace />;
+  return user ? <>{children}</> : <Navigate to="/login" />;
 };
-
-
-
-
-
