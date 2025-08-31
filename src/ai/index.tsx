@@ -79,31 +79,35 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
   if (message.isMultiResponse && message.responses) {
     return (
       <div className="mb-6">
-        <div className="flex items-center space-x-2 mb-3">
-          <Users className="w-5 h-5 text-blue-400" />
-          <span className="text-sm text-gray-400">
-            Responses from {message.responses.length} models • {message.timestamp.toLocaleTimeString()}
-          </span>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
-          {message.responses.map((response, index) => (
-            <div key={index} className="bg-gray-700 rounded-lg p-4 border-l-4 border-gray-600">
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-                <span className="text-sm font-medium text-orange-400">{response.model}</span>
-                {response.loading && <Loader2 className="w-3 h-3 animate-spin text-blue-400" />}
-              </div>
-              {response.error ? (
-                <p className="text-red-400 text-sm">{response.error}</p>
-              ) : response.loading ? (
-                <p className="text-gray-400 text-sm">Thinking...</p>
-              ) : (
-                <p className="text-gray-100 text-sm whitespace-pre-wrap break-all">{response.content}</p>
-              )}
+        {message.responses.map((response, index) => (
+          <>
+            <div className="flex items-center space-x-2 mb-3">
+              <Users className="w-5 h-5 text-blue-400" />
+              <span className="text-sm text-gray-400">
+                Responses from {message.responses?.length ?? 0} models • {message.timestamp.toLocaleTimeString()}
+              </span>
             </div>
-          ))}
-        </div>
+
+            <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
+
+              <div key={index} className="bg-gray-700 rounded-lg p-4 border-l-4 border-gray-600">
+                <div className="flex items-center space-x-2 mb-2">
+                  <div className="w-2 h-2 rounded-full bg-orange-400"></div>
+                  <span className="text-sm font-medium text-orange-400">{response.model}</span>
+                  {response.loading && <Loader2 className="w-3 h-3 animate-spin text-blue-400" />}
+                </div>
+                {response.error ? (
+                  <p className="text-red-400 text-sm">{response.error}</p>
+                ) : response.loading ? (
+                  <p className="text-gray-400 text-sm">Thinking...</p>
+                ) : (
+                  <p className="text-gray-100 text-sm whitespace-pre-wrap break-all">{response.content}</p>
+                )}
+              </div>
+
+            </div>
+          </>
+        ))}
       </div>
     );
   }
@@ -171,52 +175,52 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                     className={`flex flex-col h-full min-w-0 transition-all duration-300
                     ${index < selectedModels.length - 1 ? "border-r border-gray-700" : ""}
                   `}
-                    style={{
-                      width: `calc((100% - ${collapsedModels.length * 80}px) / ${selectedModels.length - collapsedModels.length})`,
-                      flex: '1 1 auto'
-                    }}
-                  >
-                    <div className="sticky top-0 bg-gray-800 py-2 px-4 flex items-center z-10 justify-between">
-                      <span className="font-medium">{model.name}</span>
-                      <div className='flex gap-4'>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={model.selected}
-                            onChange={() => onToggleModelActive(model.id)}
-                            className="sr-only peer"
-                          />
-                          <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer ${model.selected ? 'peer-checked:bg-blue-600' : ''} peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all`}></div>
-                        </label>
-                        <button
-                          onClick={() => onToggleAllCollapse(model.id)}
-                          className="text-gray-400 hover:text-white"
-                        >
-                          <Expand className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                      {messages.map((message) => (
-                        <MessageBubble
-                          key={message.id}
-                          message={
-                            message.isMultiResponse
-                              ? {
-                                ...message,
-                                responses: message.responses?.filter((res) => res.model === model.id) ?? []
-                              }
-                              : message
-                          }
+                  style={{
+                    width: `calc((100% - ${collapsedModels.length * 80}px) / ${selectedModels.length - collapsedModels.length})`,
+                    flex: '1 1 auto'
+                  }}
+                >
+                  <div className="sticky top-0 bg-gray-800 py-2 px-4 flex items-center z-10 justify-between">
+                    <span className="font-medium">{model.name}</span>
+                    <div className='flex gap-4'>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={model.selected}
+                          onChange={() => onToggleModelActive(model.id)}
+                          className="sr-only peer"
                         />
-                      ))}
+                        <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer ${model.selected ? 'peer-checked:bg-blue-600' : ''} peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all`}></div>
+                      </label>
+                      <button
+                        onClick={() => onToggleAllCollapse(model.id)}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        <Expand className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                );
-              } else {
-                return <></>;
-              }
-            })}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    {messages.map((message) => (
+                      <MessageBubble
+                        key={message.id}
+                        message={
+                          message.isMultiResponse
+                            ? {
+                              ...message,
+                              responses: message.responses?.filter((res) => res.model === model.id) ?? []
+                            }
+                            : message
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            } else {
+              return <></>;
+            }
+          })}
             {selectedModels.map((model) => {// Assuming all selected models are active
               if (!model.isExpend && !model.selected) {
                 return (
@@ -443,14 +447,6 @@ const AI: React.FC = () => {
   const handleSendMessage = async () => {
     if (!message.trim() || isLoading || selectedModels.length === 0) return;
 
-    const userMessage: Message = {
-      id: generateId(),
-      content: message,
-      role: 'user',
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
     const currentMessage = message;
     setMessage('');
     setIsLoading(true);
@@ -475,7 +471,6 @@ const AI: React.FC = () => {
 
       try {
         const responses = await apiService.sendQuery(currentMessage, selectedModels.filter((model) => model.selected).map((model) => model.id));
-
         // Update ONLY the multiResponseMessage
         setMessages(prev =>
           prev.map(msg => {
