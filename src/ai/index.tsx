@@ -266,54 +266,23 @@ const MessageBubble: React.FC<{
             } group-hover:bg-opacity-95 transition-all`}
 
         >
-          {isEditing ? (
-            <div className="mb-2">
-              <textarea
-                value={editedContent}
-                onChange={(e) => setEditedContent(e.target.value)}
-                className="w-full bg-gray-600 text-white rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={4}
-                autoFocus
-              />
-              <div className="flex space-x-2 justify-end mt-2">
-                <button
-                  onClick={handleCancelEdit}
-                  className="px-2 py-1 text-xs bg-gray-500 rounded-md hover:bg-gray-400 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveEdit}
-                  className="px-2 py-1 text-xs bg-blue-500 rounded-md hover:bg-blue-400 transition-colors"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <p className="whitespace-pre-wrap text-sm sm:text-base break-all">{message.content}</p>
-              <div className="text-xs opacity-70 mt-2 flex items-center space-x-2">
-                <span>{message.timestamp.toLocaleTimeString()}</span>
-                {message.model && (
-                  <>
-                    <span>•</span>
-                    <span className="font-medium">{message.model}</span>
-                  </>
-                )}
-              </div>
-            </>
-          )}
+
+
+          <p className="whitespace-pre-wrap text-sm sm:text-base break-all">{message.content}</p>
+          <div className="text-xs opacity-70 mt-2 flex items-center space-x-2">
+            <span>{message.timestamp.toLocaleTimeString()}</span>
+            {message.model && (
+              <>
+                <span>•</span>
+                <span className="font-medium">{message.model}</span>
+              </>
+            )}
+          </div>
+
+
 
           {showActions && !isEditing && message.role === 'user' && (
-            <div className="absolute -top-8 right-0 bg-gray-800 rounded-lg p-1 shadow-lg flex space-x-1">
-              <button
-                onClick={() => setIsEditing(true)}
-                className="p-1 text-gray-400 hover:text-white rounded"
-                title="Edit"
-              >
-                <Edit3 className="w-3 h-3" />
-              </button>
+            <div className="absolute  right-0 bg-gray-800 rounded-lg p-1 shadow-lg flex space-x-1">
               <button
                 onClick={() => onCopy?.(message.content)}
                 className="p-1 text-gray-400 hover:text-white rounded"
