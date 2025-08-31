@@ -8,6 +8,8 @@ import {
   Menu,
   X,
   Expand,
+  ListCollapse,
+  UnfoldHorizontal,
 } from 'lucide-react';
 
 import type { AIModel, Message } from '../lib/type';
@@ -29,6 +31,7 @@ interface ChatAreaProps {
   onToggleModelActive: (modelId: string) => void;
   collapsedModels: string[];
   onToggleCollapse: (modelId: string, val: boolean) => void;
+  onToggleAllCollapse: (modelId: string) => void;
 }
 interface InputAreaProps {
   message: string;
@@ -143,7 +146,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   selectedModels,
   onToggleModelActive,
   collapsedModels,
-  onToggleCollapse
+  onToggleCollapse,
+  onToggleAllCollapse
 }) => {
   return (
     <div className="flex flex-col h-screen w-full mx-auto bg-gray-900 text-gray-100 shadow-xl overflow-hidden">
@@ -185,7 +189,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                           <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer ${model.selected ? 'peer-checked:bg-blue-600' : ''} peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all`}></div>
                         </label>
                         <button
-                          onClick={() => onToggleCollapse(model.id, false)}
+                          onClick={() => onToggleAllCollapse(model.id)}
                           className="text-gray-400 hover:text-white"
                         >
                           <Expand className="w-4 h-4" />
@@ -237,7 +241,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                           onClick={() => onToggleCollapse(model.id, true)}
                           className="text-gray-400 hover:text-white"
                         >
-                          <Expand className="w-4 h-4" />
+                          <UnfoldHorizontal className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -415,6 +419,26 @@ const AI: React.FC = () => {
     });
   };
 
+  const handleToggleAllCollapse = (modelId: string) => {
+    setModels((prev) => {
+      return prev.map((model) => {
+        if (model.id === modelId) {
+          return {
+            ...model,
+            isExpend: true,
+            selected: true, // expanding means selecting
+          };
+        } else {
+          return {
+            ...model,
+            isExpend: false,
+            selected: false, // collapse = deselect
+          };
+        }
+      });
+    });
+  };
+
 
   const handleSendMessage = async () => {
     if (!message.trim() || isLoading || selectedModels.length === 0) return;
@@ -533,6 +557,8 @@ const AI: React.FC = () => {
               onToggleModelActive={handleToggleModelActive}
               collapsedModels={collapsedModels}
               onToggleCollapse={handleToggleCollapse}
+              onToggleAllCollapse={handleToggleAllCollapse}
+
             />
             <InputArea
               message={message}
