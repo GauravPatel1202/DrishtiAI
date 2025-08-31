@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Send,
   User,
@@ -12,6 +12,8 @@ import {
   ChevronUp,
   Sparkles,
   ChevronDown,
+  Square,
+  Mic,
 } from 'lucide-react';
 
 import type { AIModel, Message } from '../lib/type';
@@ -262,6 +264,58 @@ const ChatArea: React.FC<ChatAreaProps> = ({
 // Input Area Component - Updated for mobile
 const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendMessage, isLoading, selectedModels, suggestedQuestions, onUseExample }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const adjustTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [message]);
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0])
+          .map(result => result.transcript)
+          .join('');
+        // setMessage(transcript);
+        onMessageChange(transcript)
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      if (isRecording) {
+        recognition.start();
+      } else {
+        recognition.stop();
+      }
+
+      return () => {
+        recognition.stop();
+      };
+    }
+  }, [isRecording]);
+
+  const handleToggleRecording = () => {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      alert("Speech recognition is not supported in your browser");
+      return;
+    }
+    setIsRecording(!isRecording);
+  };
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
       e.preventDefault();
@@ -311,31 +365,44 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
           )}
         </div>
       )}
-      <div className="max-w-6xl mx-auto">
-        <div className="relative">
+      <div className="max-w-6xl mx-auto p-3">
+        <div className="relative bg-gray-750 border border-gray-600 rounded-xl focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
           <textarea
             value={message}
+            ref={textareaRef}
             onChange={(e) => onMessageChange(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder={getPlaceholder()}
             disabled={isLoading || selectedModels.length === 0}
-            className="w-full bg-gray-800 border border-gray-600 rounded-xl p-3 sm:p-4 pr-24 sm:pr-32 text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 text-sm sm:text-base"
+            className="w-full bg-transparent p-3 pr-24 text-white placeholder-gray-400 resize-none focus:outline-none disabled:opacity-50 text-sm sm:text-base scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent"
             rows={1}
             style={{ minHeight: '48px', maxHeight: '120px' }}
           />
-          <div className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 flex items-center space-x-1">
+          <div className="absolute right-2 bottom-2 flex items-center space-x-2">
+            <button
+              onClick={handleToggleRecording}
+              className={`p-2 rounded-lg transition-colors ${isRecording
+                ? 'bg-red-500 text-white animate-pulse'
+                : 'text-gray-400 hover:text-white hover:bg-gray-700'}`}
+              disabled={isLoading}
+              title={isRecording ? "Stop recording" : "Start voice input"}
+            >
+              {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </button>
+
             <button
               onClick={onSendMessage}
               disabled={!message.trim() || isLoading}
-              className={`p-1 sm:p-2 rounded-lg transition-colors ${message.trim() && !isLoading
-                ? 'bg-green-500 hover:bg-green-600 text-white'
+              className={`p-2 rounded-lg transition-colors flex items-center justify-center ${message.trim() && !isLoading
+                ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600'
                 : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                 }`}
+              title="Send message"
             >
               {isLoading ? (
-                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <Send className="w-4 h-4" />
               )}
             </button>
           </div>
