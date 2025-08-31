@@ -9,6 +9,9 @@ import {
   X,
   Expand,
   UnfoldHorizontal,
+  ChevronUp,
+  Sparkles,
+  ChevronDown,
 } from 'lucide-react';
 
 import type { AIModel, Message } from '../lib/type';
@@ -36,8 +39,10 @@ interface InputAreaProps {
   message: string;
   onMessageChange: (message: string) => void;
   onSendMessage: () => void;
+  onUseExample: (example: string) => void;
   isLoading: boolean;
   selectedModels: AIModel[];
+  suggestedQuestions: string[];
 }
 
 const providerMapping: { [key: string]: string } = {
@@ -158,100 +163,105 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   return (
     <div className="flex flex-col h-screen w-full mx-auto bg-gray-900 text-gray-100 shadow-xl overflow-hidden">
       <div className="flex-1 flex overflow-x-auto w-full scroll-smooth bg-gray-850 scrollbar-hide">
-            {selectedModels.map((model, index) => {// Assuming all selected models are active
-              if (model.isExpend && model.selected) {
-                return (
-                  <div
-                    key={model.id}
-                    className={`flex flex-col flex-auto h-full transition-all duration-300 min-w-full sm:min-w-0
-                      w-[calc((100%-${collapsedModels.length * 80}px)/${selectedModels.length - collapsedModels.length})]
-                    ${index < selectedModels.length - 1 ? "border-r border-gray-700" : ""}
-                  `}
-                >
-                  <div className="sticky top-0 bg-gray-800 py-2 px-4 flex items-center z-10 justify-between">
-                    <span className="font-medium">{model.name}</span>
-                    <div className='flex gap-4'>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={model.selected}
-                          onChange={() => onToggleModelActive(model.id)}
-                          className="sr-only peer"
-                        />
-                        <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer ${model.selected ? 'peer-checked:bg-blue-600' : ''} peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all`}></div>
-                      </label>
-                      <button
-                        onClick={() => onToggleAllCollapse(model.id)}
-                        className="text-gray-400 hover:text-white"
-                      >
-                        <Expand className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {messages.map((message) => (
-                      <MessageBubble
-                        key={message.id}
-                        model={model.id}
-                        message={
-                          message.isMultiResponse
-                            ? {
-                              ...message,
-                              responses: message.responses?.filter((res) => res.model === model.id) ?? []
-                            }
-                            : message
-                        }
+        {selectedModels.map((model, index) => {// Assuming all selected models are active
+          if (model.isExpend && model.selected) {
+            return (
+              <div
+                key={model.id}
+                className={` flex flex-col flex-auto h-full transition-all duration-300 min-w-full sm:min-w-0 
+                    ${index < selectedModels.length - 1 ? "border-r border-gray-700" : ""}`
+                }
+
+                style={{
+                  width: `calc((100% - ${collapsedModels.length * 80}px) / ${selectedModels.length - collapsedModels.length})`,
+                  flex: '1 1 auto'
+                }}
+              >
+                <div className="sticky top-0 bg-gray-800 py-2 px-4 flex items-center z-10 justify-between">
+                  <span className="font-medium">{model.name}</span>
+                  <div className='flex gap-4'>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={model.selected}
+                        onChange={() => onToggleModelActive(model.id)}
+                        className="sr-only peer"
                       />
-                    ))}
+                      <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer ${model.selected ? 'peer-checked:bg-blue-600' : ''} peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all`}></div>
+                    </label>
+                    <button
+                      onClick={() => onToggleAllCollapse(model.id)}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      <Expand className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-              );
-            } else {
-              return <></>;
-            }
-          })}
-            {selectedModels.map((model) => {// Assuming all selected models are active
-              if (!model.isExpend && !model.selected) {
-                return (
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {messages.map((message) => (
+                    <MessageBubble
+                      key={message.id}
+                      model={model.id}
+                      message={
+                        message.isMultiResponse
+                          ? {
+                            ...message,
+                            responses: message.responses?.filter((res) => res.model === model.id) ?? []
+                          }
+                          : message
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          } else {
+            return <></>;
+          }
+        })}
+        {selectedModels.map((model) => {// Assuming all selected models are active
+          if (!model.isExpend && !model.selected) {
+            return (
 
-                  <div
-                    key={model.id}
-                    className="flex flex-col md:flex-col h-full min-w-0 border-r border-gray-700 last:border-r-0 w-12 md:w-20 flex-none "
-                  >
-                    <div className="sticky top-0 bg-gray-800 py-2 px-3 flex flex-col items-center justify-between h-full z-10">
-                      <span className="font-medium text-xs text-center mb-2">{model.name}</span>
-                      <div className='flex flex-col items-center gap-3'>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={model.selected}
-                            onChange={() => onToggleModelActive(model.id)}
-                            className="sr-only peer"
-                          />
-                          <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer ${model.selected ? 'peer-checked:bg-blue-600' : ''} peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all`}></div>
-                        </label>
-                        <button
-                          onClick={() => onToggleCollapse(model.id, true)}
-                          className="text-gray-400 hover:text-white"
-                        >
-                          <UnfoldHorizontal className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
+              <div
+                key={model.id}
+                className="flex flex-col md:flex-col h-full min-w-0 border-r border-gray-700 last:border-r-0 w-12 md:w-20 flex-none "
+              >
+                <div className="sticky top-0 bg-gray-800 py-2 px-3 flex flex-col items-center justify-between h-full z-10">
+                  <span className="font-medium text-xs text-center mb-2">{model.name}</span>
+                  <div className='flex flex-col items-center gap-3'>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={model.selected}
+                        onChange={() => onToggleModelActive(model.id)}
+                        className="sr-only peer"
+                      />
+                      <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer ${model.selected ? 'peer-checked:bg-blue-600' : ''} peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all`}></div>
+                    </label>
+                    <button
+                      onClick={() => onToggleCollapse(model.id, true)}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      <UnfoldHorizontal className="w-4 h-4" />
+                    </button>
                   </div>
+                </div>
+              </div>
 
-                );
-              } else {
-                return null
-              }
-            })}
+            );
+          } else {
+            return null
+          }
+        })}
       </div>
     </div>
   );
 };
 
 // Input Area Component - Updated for mobile
-const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendMessage, isLoading, selectedModels }) => {
+const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendMessage, isLoading, selectedModels, suggestedQuestions, onUseExample }) => {
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
       e.preventDefault();
@@ -270,6 +280,37 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
 
   return (
     <div className="border-t border-gray-700 p-3 sm:p-4">
+      {suggestedQuestions.length > 0 && (
+        <div className="max-w-6xl mx-auto px-4 py-2">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-gray-400 flex items-center">
+              <Sparkles className="w-3 h-3 mr-1" />
+              Try asking...
+            </span>
+            <button
+              onClick={() => setShowSuggestions(!showSuggestions)}
+              className="text-xs text-gray-500 hover:text-gray-300 flex items-center"
+            >
+              {showSuggestions ? 'Hide' : 'Show'}
+              {showSuggestions ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />}
+            </button>
+          </div>
+
+          {showSuggestions && (
+            <div className="flex overflow-x-auto space-x-2 pb-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+              {suggestedQuestions.map((question, index) => (
+                <button
+                  key={index}
+                  onClick={() => onUseExample(question)}
+                  className="flex-shrink-0 bg-gray-700 hover:bg-gray-600 text-xs text-gray-200 px-3 py-2 rounded-lg transition-colors whitespace-nowrap"
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       <div className="max-w-6xl mx-auto">
         <div className="relative">
           <textarea
@@ -339,6 +380,14 @@ const modelsComponent = [
     isExpend: false
   }
 ]
+
+const exampleQuestions = [
+  "Explain quantum computing in simple terms",
+  "How to learn React quickly?",
+  "What are the best practices for API design?",
+  "Write a poem about artificial intelligence",
+  "Compare Next.js and Remix frameworks"
+];
 
 const AI: React.FC = () => {
   const [message, setMessage] = useState('');
@@ -507,6 +556,10 @@ const AI: React.FC = () => {
     setCollapsedModels([]);
   };
 
+  const handleUseExample = (example: string) => {
+    setMessage(example);
+  };
+
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
@@ -562,6 +615,8 @@ const AI: React.FC = () => {
               onSendMessage={handleSendMessage}
               isLoading={isLoading}
               selectedModels={selectedModels}
+              onUseExample={handleUseExample}
+              suggestedQuestions={exampleQuestions}
             /></>}
           />
         </Routes>
