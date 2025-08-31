@@ -14,6 +14,11 @@ import {
   ChevronDown,
   Square,
   Mic,
+  Edit3,
+  Copy,
+  Zap,
+  ThumbsDown,
+  ThumbsUp,
 } from 'lucide-react';
 
 import type { AIModel, Message } from '../lib/type';
@@ -36,6 +41,10 @@ interface ChatAreaProps {
   collapsedModels: string[];
   onToggleCollapse: (modelId: string, val: boolean) => void;
   onToggleAllCollapse: (modelId: string) => void;
+  onEditMessage: (messageId: string, newContent: string) => void;
+  onRegenerateResponse: (messageId: string) => void;
+  onCopyMessage: (content: string) => void;
+  onRateResponse: (messageId: string, modelId: string, rating: boolean) => void;
 }
 interface InputAreaProps {
   message: string;
@@ -81,65 +90,241 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
 };
 
 // Message Component - Enhanced for mobile
-const MessageBubble: React.FC<{ message: Message, model: string }> = ({ message, model }) => {
+// const MessageBubble: React.FC<{
+//   message: Message, model: string, onEdit?: (newContent: string) => void,
+//   onRegenerate?: () => void,
+//   onCopy?: (content: string) => void,
+//   onRate?: (rating: boolean) => void
+// }> = ({ message, model, onEdit, onRegenerate, onCopy, onRate }) => {
+//   if (message.isMultiResponse && message.responses) {
+//     return (
+//       <div className="mb-6">
+//         {message.responses.map((response, index) => (
+//           <>
+//             <div className="flex items-center space-x-2 mb-3">
+//               <Users className="w-5 h-5 text-blue-400" />
+//               <span className="text-sm text-gray-400">
+//                 Responses from {message.responses?.length ?? 0} models • {message.timestamp.toLocaleTimeString()}
+//               </span>
+//             </div>
+
+//             <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
+
+//               <div key={index} className="bg-gray-700 rounded-lg p-4 border-l-4 border-gray-600">
+//                 <div className="flex items-center space-x-2 mb-2">
+//                   <div className="w-2 h-2 rounded-full bg-orange-400"></div>
+//                   <span className="text-sm font-medium text-orange-400">{response.model}</span>
+//                   {response.loading && <Loader2 className="w-3 h-3 animate-spin text-blue-400" />}
+//                 </div>
+//                 {response.error ? (
+//                   <p className="text-red-400 text-sm">{response.error}</p>
+//                 ) : response.loading ? (
+//                   <p className="text-gray-400 text-sm">Thinking...</p>
+//                 ) : (
+//                   <p className="text-gray-100 text-sm whitespace-pre-wrap break-all">{response.content}</p>
+//                 )}
+//               </div>
+
+//             </div>
+//           </>
+//         ))}
+//       </div>
+//     );
+//   }
+//   if (message.model === model) {
+//     return (<>
+//       <div className={`flex items-start space-x-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
+//         {message.role === 'assistant' && (
+//           <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
+//             <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+//           </div>
+//         )}
+
+//         <div className={`max-w-xs sm:max-w-md md:max-w-lg p-3 sm:p-4 rounded-lg ${message.role === 'user'
+//           ? 'bg-blue-600 text-white ml-8 sm:ml-12'
+//           : 'bg-gray-700 text-gray-100 mr-8 sm:mr-12'
+//           }`}>
+//           <p className="whitespace-pre-wrap text-sm sm:text-base">{message.content}</p>
+//           <div className="text-xs opacity-70 mt-2 flex items-center space-x-2">
+//             <span>{message.timestamp.toLocaleTimeString()}</span>
+//             {message.model && (
+//               <>
+//                 <span>•</span>
+//                 <span className="font-medium">{message.model}</span>
+//               </>
+//             )}
+//           </div>
+//         </div>
+
+//         {message.role === 'user' && (
+//           <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+//             <User className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+//           </div>
+//         )}
+//       </div>
+//     </>)
+//   }
+//   return <></>
+
+// };
+
+const MessageBubble: React.FC<{
+  message: Message,
+  model: string,
+  onEdit?: (newContent: string) => void,
+  onRegenerate?: () => void,
+  onCopy?: (content: string) => void,
+  onRate?: (rating: boolean) => void
+}> = ({ message, model, onEdit, onRegenerate, onCopy }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState(message.content);
+  const [showActions, setShowActions] = useState(false);
+
+  const handleSaveEdit = () => {
+    if (onEdit && editedContent.trim() && editedContent !== message.content) {
+      onEdit(editedContent);
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditedContent(message.content);
+    setIsEditing(false);
+  };
+
   if (message.isMultiResponse && message.responses) {
     return (
-      <div className="mb-6">
-        {message.responses.map((response, index) => (
-          <>
-            <div className="flex items-center space-x-2 mb-3">
-              <Users className="w-5 h-5 text-blue-400" />
-              <span className="text-sm text-gray-400">
-                Responses from {message.responses?.length ?? 0} models • {message.timestamp.toLocaleTimeString()}
-              </span>
-            </div>
+      <div className="mb-6 group relative">
+        <div className="flex items-center space-x-2 mb-3">
+          <Users className="w-5 h-5 text-blue-400" />
+          <span className="text-sm text-gray-400">
+            Responses from {message.responses?.length ?? 0} models • {message.timestamp.toLocaleTimeString()}
+          </span>
+        </div>
 
-            <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
-
-              <div key={index} className="bg-gray-700 rounded-lg p-4 border-l-4 border-gray-600">
-                <div className="flex items-center space-x-2 mb-2">
+        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
+          {message.responses.map((response, index) => (
+            <div key={index} className="bg-gray-700 rounded-lg p-4 border-l-4 border-gray-600 hover:border-blue-500 transition-colors relative">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 rounded-full bg-orange-400"></div>
                   <span className="text-sm font-medium text-orange-400">{response.model}</span>
                   {response.loading && <Loader2 className="w-3 h-3 animate-spin text-blue-400" />}
                 </div>
-                {response.error ? (
-                  <p className="text-red-400 text-sm">{response.error}</p>
-                ) : response.loading ? (
-                  <p className="text-gray-400 text-sm">Thinking...</p>
-                ) : (
-                  <p className="text-gray-100 text-sm whitespace-pre-wrap break-all">{response.content}</p>
+
+                {!response.loading && !response.error && (
+                  <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => onCopy?.(response.content)}
+                      className="p-1text-white rounded"
+                      title="Copy"
+                    >
+                      <Copy className="w-3 h-3" />
+                    </button>
+                  </div>
                 )}
               </div>
 
+              {response.error ? (
+                <div className="text-red-400 text-sm">
+                  <p>{response.error}</p>
+                  <button
+                    onClick={onRegenerate}
+                    className="mt-2 text-xs text-blue-400 hover:text-blue-300 flex items-center"
+                  >
+                    <Zap className="w-3 h-3 mr-1" />
+                    Regenerate
+                  </button>
+                </div>
+              ) : response.loading ? (
+                  <div className="flex items-center space-x-2 text-gray-400">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm">Thinking...</span>
+                  </div>
+                ) : (
+                <p className="text-gray-100 text-sm whitespace-pre-wrap break-words">{response.content}</p>
+              )}
             </div>
-          </>
-        ))}
+          ))}
+        </div>
       </div>
     );
   }
+
   if (message.model === model) {
-    return (<>
-      <div className={`flex items-start space-x-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
+    return (
+      <div className={`flex items-start space-x-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4 group`} onMouseEnter={() => setShowActions(true)}
+        onMouseLeave={() => setShowActions(false)}>
         {message.role === 'assistant' && (
           <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
             <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
           </div>
         )}
 
-        <div className={`max-w-xs sm:max-w-md md:max-w-lg p-3 sm:p-4 rounded-lg ${message.role === 'user'
-          ? 'bg-blue-600 text-white ml-8 sm:ml-12'
-          : 'bg-gray-700 text-gray-100 mr-8 sm:mr-12'
-          }`}>
-          <p className="whitespace-pre-wrap text-sm sm:text-base">{message.content}</p>
-          <div className="text-xs opacity-70 mt-2 flex items-center space-x-2">
-            <span>{message.timestamp.toLocaleTimeString()}</span>
-            {message.model && (
-              <>
-                <span>•</span>
-                <span className="font-medium">{message.model}</span>
-              </>
-            )}
-          </div>
+        <div
+          className={`relative max-w-xs sm:max-w-md md:max-w-lg p-3 sm:p-4 rounded-lg ${message.role === 'user'
+            ? 'bg-blue-600 text-white ml-8 sm:ml-12'
+            : 'bg-gray-700 text-gray-100 mr-8 sm:mr-12'
+            } group-hover:bg-opacity-95 transition-all`}
+
+        >
+          {isEditing ? (
+            <div className="mb-2">
+              <textarea
+                value={editedContent}
+                onChange={(e) => setEditedContent(e.target.value)}
+                className="w-full bg-gray-600 text-white rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={4}
+                autoFocus
+              />
+              <div className="flex space-x-2 justify-end mt-2">
+                <button
+                  onClick={handleCancelEdit}
+                  className="px-2 py-1 text-xs bg-gray-500 rounded-md hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  className="px-2 py-1 text-xs bg-blue-500 rounded-md hover:bg-blue-400 transition-colors"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="whitespace-pre-wrap text-sm sm:text-base break-all">{message.content}</p>
+              <div className="text-xs opacity-70 mt-2 flex items-center space-x-2">
+                <span>{message.timestamp.toLocaleTimeString()}</span>
+                {message.model && (
+                  <>
+                    <span>•</span>
+                    <span className="font-medium">{message.model}</span>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+
+          {showActions && !isEditing && message.role === 'user' && (
+            <div className="absolute -top-8 right-0 bg-gray-800 rounded-lg p-1 shadow-lg flex space-x-1">
+              <button
+                onClick={() => setIsEditing(true)}
+                className="p-1 text-gray-400 hover:text-white rounded"
+                title="Edit"
+              >
+                <Edit3 className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => onCopy?.(message.content)}
+                className="p-1 text-gray-400 hover:text-white rounded"
+                title="Copy"
+              >
+                <Copy className="w-3 h-3" />
+              </button>
+            </div>
+          )}
         </div>
 
         {message.role === 'user' && (
@@ -148,20 +333,32 @@ const MessageBubble: React.FC<{ message: Message, model: string }> = ({ message,
           </div>
         )}
       </div>
-    </>)
+    );
   }
-  return <></>
-
-};
-
+    return <></>;
+  };
 const ChatArea: React.FC<ChatAreaProps> = ({
   messages,
   selectedModels,
   onToggleModelActive,
   collapsedModels,
   onToggleCollapse,
-  onToggleAllCollapse
+  onToggleAllCollapse,
+  onEditMessage,
+  onRegenerateResponse,
+  onCopyMessage,
+  onRateResponse
 }) => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   return (
     <div className="flex flex-col h-screen w-full mx-auto bg-gray-900 text-gray-100 shadow-xl overflow-hidden">
       <div className="flex-1 flex overflow-x-auto w-full scroll-smooth bg-gray-850 scrollbar-hide">
@@ -212,8 +409,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                           }
                           : message
                       }
+                      onEdit={(newContent) => onEditMessage(message.id, newContent)}
+                      onRegenerate={() => onRegenerateResponse(message.id)}
+                      onCopy={onCopyMessage}
+                      onRate={(rating) => onRateResponse(message.id, model.id, rating)}
                     />
                   ))}
+                  <div ref={messagesEndRef} />
                 </div>
               </div>
             );
@@ -626,6 +828,95 @@ const AI: React.FC = () => {
   const handleUseExample = (example: string) => {
     setMessage(example);
   };
+  const handleCopyMessage = (content: string) => {
+    navigator.clipboard.writeText(content);
+    // You could add a toast notification here
+  };
+  const handleEditMessage = (messageId: string, newContent: string) => {
+    setMessages(prev =>
+      prev.map(msg =>
+        msg.id === messageId ? { ...msg, content: newContent } : msg
+      )
+    );
+  };
+
+  const handleRateResponse = (messageId: string, modelId: string, rating: boolean) => {
+    // Here you would typically send this feedback to your backend
+    console.log(`Rated message ${messageId} from model ${modelId} as ${rating ? 'good' : 'bad'}`);
+  }
+
+  const handleRegenerateResponse = async (messageId: string) => {
+    // Find the user message that this response is for
+    const responseMessage = messages.find(m => m.id === messageId);
+    if (!responseMessage || !responseMessage.isMultiResponse) return;
+
+    // Find the user message that preceded this response
+    const userMessageIndex = messages.findIndex(m => m.id === messageId) - 1;
+    if (userMessageIndex < 0) return;
+
+    const userMessage = messages[userMessageIndex];
+    if (userMessage.role !== 'user') return;
+
+    setIsLoading(true);
+
+    // Update the response message to show loading state
+    setMessages(prev =>
+      prev.map(msg => {
+        if (msg.id === messageId) {
+          return {
+            ...msg,
+            responses: msg.responses?.map(r => ({ ...r, loading: true, error: undefined })) || [],
+          };
+        }
+        return msg;
+      })
+    );
+
+    try {
+      const responses = await apiService.sendQuery(userMessage.content, selectedModels.filter((model) => model.selected).map((model) => model.id));
+
+      // Update the response message with new responses
+      setMessages(prev =>
+        prev.map(msg => {
+          if (msg.id === messageId) {
+            return {
+              ...msg,
+              responses: selectedModels.filter((model) => model.selected).map(model => {
+                const response = (responses as unknown as any[])?.find(
+                  (res: any) => res.provider === providerMapping[model.id]
+                );
+                return {
+                  model: model.id,
+                  content: response?.content ?? 'No response received',
+                  loading: false,
+                };
+              }),
+            };
+          }
+          return msg;
+        })
+      );
+    } catch (error) {
+      console.error(error);
+      setMessages(prev =>
+        prev.map(msg => {
+          if (msg.id === messageId) {
+            return {
+              ...msg,
+              responses: msg.responses?.map(r => ({
+                ...r,
+                error: 'Failed to regenerate response',
+                loading: false
+              })) || [],
+            };
+          }
+          return msg;
+        })
+      );
+    }
+
+    setIsLoading(false);
+  };
 
 
   return (
@@ -674,6 +965,10 @@ const AI: React.FC = () => {
               collapsedModels={collapsedModels}
               onToggleCollapse={handleToggleCollapse}
               onToggleAllCollapse={handleToggleAllCollapse}
+              onEditMessage={handleEditMessage}
+              onRegenerateResponse={handleRegenerateResponse}
+              onCopyMessage={handleCopyMessage}
+              onRateResponse={handleRateResponse}
 
             />
             <InputArea
