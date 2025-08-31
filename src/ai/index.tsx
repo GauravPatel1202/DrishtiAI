@@ -163,13 +163,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                 return (
                   <div
                     key={model.id}
-                    className={`flex flex-col h-full min-w-0 transition-all duration-300
+                    className={`flex flex-col flex-auto h-full transition-all duration-300 min-w-full sm:min-w-0
+                      w-[calc((100%-${collapsedModels.length * 80}px)/${selectedModels.length - collapsedModels.length})]
                     ${index < selectedModels.length - 1 ? "border-r border-gray-700" : ""}
                   `}
-                  style={{
-                    width: `calc((100% - ${collapsedModels.length * 80}px) / ${selectedModels.length - collapsedModels.length})`,
-                    flex: '1 1 auto'
-                  }}
                 >
                   <div className="sticky top-0 bg-gray-800 py-2 px-4 flex items-center z-10 justify-between">
                     <span className="font-medium">{model.name}</span>
@@ -216,10 +213,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             {selectedModels.map((model) => {// Assuming all selected models are active
               if (!model.isExpend && !model.selected) {
                 return (
+
                   <div
                     key={model.id}
-                    className="flex flex-col h-full min-w-0 border-r border-gray-700 last:border-r-0"
-                    style={{ width: '80px', flex: '0 0 auto' }}
+                    className="flex flex-col md:flex-col h-full min-w-0 border-r border-gray-700 last:border-r-0 w-12 md:w-20 flex-none "
                   >
                     <div className="sticky top-0 bg-gray-800 py-2 px-3 flex flex-col items-center justify-between h-full z-10">
                       <span className="font-medium text-xs text-center mb-2">{model.name}</span>
@@ -242,6 +239,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                       </div>
                     </div>
                   </div>
+
                 );
               } else {
                 return null
