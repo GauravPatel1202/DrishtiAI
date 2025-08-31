@@ -157,18 +157,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
 }) => {
   return (
     <div className="flex flex-col h-screen w-full mx-auto bg-gray-900 text-gray-100 shadow-xl overflow-hidden">
-      {selectedModels.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-850">
-          <div className="text-center max-w-md">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-            </svg>
-            <h3 className="text-xl font-semibold text-gray-300 mb-2">No AI Models Selected</h3>
-            <p className="text-gray-500">Select at least one AI model from the options above to start chatting.</p>
-          </div>
-        </div>
-      ) : (
-          <div className="flex-1 flex overflow-x-auto w-full scroll-smooth bg-gray-850 scrollbar-hide">
+      <div className="flex-1 flex overflow-x-auto w-full scroll-smooth bg-gray-850 scrollbar-hide">
             {selectedModels.map((model, index) => {// Assuming all selected models are active
               if (model.isExpend && model.selected) {
                 return (
@@ -258,8 +247,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                 return null
               }
             })}
-        </div>
-      )}
+      </div>
     </div>
   );
 };
