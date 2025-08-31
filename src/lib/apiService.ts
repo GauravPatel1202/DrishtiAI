@@ -15,7 +15,7 @@ export const PATHS = Object.freeze({
   QUERIES: () => `/api/queries/query`,
 });
 
-export const createApiClient = (token: string): WACApiClient => {
+export const createApiClient = (): WACApiClient => {
   const sendQuery = async (
     query: string,
     model: string[]
