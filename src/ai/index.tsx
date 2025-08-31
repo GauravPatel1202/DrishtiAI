@@ -17,8 +17,6 @@ import {
   Edit3,
   Copy,
   Zap,
-  ThumbsDown,
-  ThumbsUp,
 } from 'lucide-react';
 
 import type { AIModel, Message } from '../lib/type';
