@@ -348,7 +348,7 @@ const AI: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [models, setModels] = useState<AIModel[]>(modelsComponent);
   const [collapsedModels, setCollapsedModels] = useState<string[]>([]);
-  const apiService = createApiClient('');
+  const apiService = createApiClient();
   const selectedModels = models.filter(m => m.enabled);
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
