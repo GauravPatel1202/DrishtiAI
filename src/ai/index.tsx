@@ -1,23 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Send,
-  Image,
-  Upload,
-  Mic,
   User,
   Bot,
   Loader2,
-  Check,
   Users,
   Menu,
-  X
+  X,
+  Settings
 } from 'lucide-react';
 import type { AIModel, Message } from '../lib/type';
 import { Logo } from '../components/logo';
-import { Sidebar } from './Component/sidebar';
-import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { NewChatButton, ProjectsSection, } from './Component/sidebar';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import ProfileSettings from './profileSettings';
-import { useAuth } from '../AuthContext';
 import { createApiClient } from '../lib/apiService';
 
 interface TopBarProps {
@@ -39,8 +35,6 @@ interface InputAreaProps {
   selectedModels: string[];
 }
 
-// API Service
-
 const providerMapping: { [key: string]: string } = {
   'chatgpt': 'openai',
   'gemini': 'gemini',
@@ -48,11 +42,8 @@ const providerMapping: { [key: string]: string } = {
   'perplexity': 'mistral',
 };
 
-
-// Top Bar Component - Updated for mobile
 const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   const [showModels, setShowModels] = useState(false);
-
   return (
     <div className="border-b border-gray-700">
       <div className="max-w-6xl mx-auto">
@@ -77,47 +68,38 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   );
 };
 
-// Multi-Response Message Component
-const MultiResponseMessage: React.FC<{ message: Message }> = ({ message }) => {
-  if (!message.isMultiResponse || !message.responses) {
-    return null;
-  }
-
-  return (
-    <div className="mb-6">
-      <div className="flex items-center space-x-2 mb-3">
-        <Users className="w-5 h-5 text-blue-400" />
-        <span className="text-sm text-gray-400">
-          Responses from {message.responses.length} models • {message.timestamp.toLocaleTimeString()}
-        </span>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
-        {message.responses.map((response, index) => (
-          <div key={index} className="bg-gray-700 rounded-lg p-4 border-l-4 border-gray-600">
-            <div className="flex items-center space-x-2 mb-2">
-              <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-              <span className="text-sm font-medium text-orange-400">{response.model}</span>
-              {response.loading && <Loader2 className="w-3 h-3 animate-spin text-blue-400" />}
-            </div>
-            {response.error ? (
-              <p className="text-red-400 text-sm">{response.error}</p>
-            ) : response.loading ? (
-              <p className="text-gray-400 text-sm">Thinking...</p>
-            ) : (
-                  <p className="text-gray-100 text-sm whitespace-pre-wrap break-all">{response.content}</p>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 // Message Component - Enhanced for mobile
 const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
-  if (message.isMultiResponse) {
-    return <MultiResponseMessage message={message} />;
+  if (message.isMultiResponse && message.responses) {
+    return (
+      <div className="mb-6">
+        <div className="flex items-center space-x-2 mb-3">
+          <Users className="w-5 h-5 text-blue-400" />
+          <span className="text-sm text-gray-400">
+            Responses from {message.responses.length} models • {message.timestamp.toLocaleTimeString()}
+          </span>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
+          {message.responses.map((response, index) => (
+            <div key={index} className="bg-gray-700 rounded-lg p-4 border-l-4 border-gray-600">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="w-2 h-2 rounded-full bg-orange-400"></div>
+                <span className="text-sm font-medium text-orange-400">{response.model}</span>
+                {response.loading && <Loader2 className="w-3 h-3 animate-spin text-blue-400" />}
+              </div>
+              {response.error ? (
+                <p className="text-red-400 text-sm">{response.error}</p>
+              ) : response.loading ? (
+                <p className="text-gray-400 text-sm">Thinking...</p>
+              ) : (
+                <p className="text-gray-100 text-sm whitespace-pre-wrap break-all">{response.content}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -152,8 +134,6 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
     </div>
   );
 };
-
-// Welcome Message Component - Updated for mobile
 
 const ChatArea: React.FC<ChatAreaProps> = ({ messages, isLoading, selectedModels }) => {
   return (
@@ -229,40 +209,7 @@ const ChatAreaMassage: React.FC<ChatAreaMassageProps> = ({ messages, isLoading, 
       <div ref={messagesEndRef} />
     </div>
   </>
-
 }
-// Input Controls Component - Updated for mobile
-const InputControls: React.FC<{
-  message: string;
-  onSendMessage: () => void;
-  isLoading: boolean;
-}> = ({ message, onSendMessage, isLoading }) => (
-  <div className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 flex items-center space-x-1">
-    <button className="p-1 sm:p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
-      <Image className="w-4 h-4 sm:w-5 sm:h-5" />
-    </button>
-    <button className="p-1 sm:p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
-      <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
-    </button>
-    <button className="p-1 sm:p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
-      <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
-    </button>
-    <button
-      onClick={onSendMessage}
-      disabled={!message.trim() || isLoading}
-      className={`p-1 sm:p-2 rounded-lg transition-colors ${message.trim() && !isLoading
-        ? 'bg-green-500 hover:bg-green-600 text-white'
-        : 'bg-gray-700 text-gray-400 cursor-not-allowed'
-        }`}
-    >
-      {isLoading ? (
-        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-      ) : (
-          <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-      )}
-    </button>
-  </div>
-  );
 // Input Area Component - Updated for mobile
 const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendMessage, isLoading, selectedModels }) => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -295,7 +242,22 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
             rows={1}
             style={{ minHeight: '48px', maxHeight: '120px' }}
           />
-          <InputControls message={message} onSendMessage={onSendMessage} isLoading={isLoading} />
+          <div className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 flex items-center space-x-1">
+            <button
+              onClick={onSendMessage}
+              disabled={!message.trim() || isLoading}
+              className={`p-1 sm:p-2 rounded-lg transition-colors ${message.trim() && !isLoading
+                ? 'bg-green-500 hover:bg-green-600 text-white'
+                : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                }`}
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -303,7 +265,7 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
 };
 
 // Main App Component
-const AIFiestaClone: React.FC = () => {
+const AI: React.FC = () => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -340,13 +302,11 @@ const AIFiestaClone: React.FC = () => {
   const apiService = createApiClient('');
   const selectedModels = models.filter(m => m.selected && m.enabled).map(m => m.id);
   const generateId = () => Math.random().toString(36).substr(2, 9);
-
   const handleModelToggleSelect = (modelId: string) => {
     setModels(prev => prev.map(model =>
       model.id === modelId ? { ...model, selected: !model.selected } : model
     ));
   };
-
   const handleSendMessage = async () => {
     if (!message.trim() || isLoading || selectedModels.length === 0) return;
 
@@ -407,22 +367,54 @@ const AIFiestaClone: React.FC = () => {
     setMessage('');
   };
   const [isOpen, setIsOpen] = useState(false);
-  const [isUpgradePlanOpen, setIsUpgradePlanOpen] = useState(false);
   const navigate = useNavigate();
-
   const setIsSettingsOpen = () => {
     navigate('/app/profile');
   }
-  const userMessageCount = messages.filter(msg => msg.role === 'user').length;
   return (
     <div className="flex h-screen bg-gray-900 text-white">
-      <Sidebar
-        models={models}
-        messageCount={userMessageCount}
-        onNewChat={handleNewChat} isOpen={isOpen} setIsOpen={setIsOpen}
-        onOpenSettings={() => setIsSettingsOpen()} onOpenUpgrade={() => setIsUpgradePlanOpen(pro => !pro)} />
-      <div className="flex-1 flex flex-col min-w-0">
+      <>
+        {isOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            onClick={() => setIsOpen(false)}
+          ></div>
+        )}
 
+        {/* Sidebar - Full screen on mobile */}
+        <div className={`
+                   fixed lg:static inset-0 lg:inset-y-0 lg:left-0 z-40
+                   w-full lg:w-64 bg-gray-800 border-r border-gray-700 flex flex-col
+                   transform transition-transform duration-300 ease-in-out
+                   lg:translate-x-0
+                   ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                 `}>
+          <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+            <Logo />
+            <button
+              onClick={() => setIsOpen(false)}
+              className="lg:hidden p-1 rounded-md text-gray-400 hover:text-white"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          <div className="p-4">
+            <NewChatButton onClick={() => {
+              handleNewChat();
+              setIsOpen(false);
+            }} />
+          </div>
+          <ProjectsSection />
+          <div className="flex-1"></div>
+          <div className="p-4 border-t border-gray-700">
+            <button onClick={setIsSettingsOpen} className="w-full mt-2 text-gray-400 hover:text-white flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-700 transition-colors">
+              <Settings className="w-4 h-4" />
+              <span className="text-sm">Settings</span>
+            </button>
+          </div>
+        </div>
+      </>
+      <div className="flex-1 flex flex-col min-w-0">
         <Routes>
           <Route path="/profile" element={<ProfileSettings />} />
           <Route path="/ai-app" element={<>
@@ -444,109 +436,9 @@ const AIFiestaClone: React.FC = () => {
             /></>}
           />
         </Routes>
-
-        <UpgradePlanModal
-          isOpen={isUpgradePlanOpen}
-          onClose={() => setIsUpgradePlanOpen(false)}
-        />
       </div>
     </div>
   );
 };
 
-export default AIFiestaClone;
-
-
-const UpgradePlanModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-}> = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
-
-  const plans = [
-    {
-      name: "Free",
-      price: "$0",
-      features: ["3 AI models", "Basic responses", "Standard speed", "5 requests per hour"]
-    },
-    {
-      name: "Pro",
-      price: "$15",
-      period: "/month",
-      features: ["All AI models", "Advanced responses", "Faster speed", "Unlimited requests", "Priority support"]
-    },
-    {
-      name: "Enterprise",
-      price: "Custom",
-      features: ["All AI models", "Custom integrations", "Highest speed", "Unlimited requests", "Dedicated support", "API access"]
-    }
-  ];
-
-  return (
-    <div className="fixed inset-0 bg-gray-900/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b border-gray-700 sticky top-0 bg-gray-800">
-          <h2 className="text-xl font-semibold">Upgrade Your Plan</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="p-4 md:p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            {plans.map((plan, index) => (
-              <div
-                key={plan.name}
-                className={`bg-gray-700 rounded-lg p-4 md:p-6 ${index === 1 ? 'ring-2 ring-blue-500 md:transform md:scale-105' : ''
-                  }`}
-              >
-                <h3 className="text-lg md:text-xl font-semibold mb-2">{plan.name}</h3>
-                <div className="mb-3 md:mb-4">
-                  <span className="text-2xl md:text-3xl font-bold">{plan.price}</span>
-                  {plan.period && <span className="text-gray-400 text-sm md:text-base">{plan.period}</span>}
-                </div>
-                <ul className="space-y-1 md:space-y-2 mb-4 md:mb-6">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className="flex items-start">
-                      <Check className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      <span className="text-xs md:text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  className={`w-full py-2 rounded-lg font-medium text-sm md:text-base ${index === 1
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                    : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
-                    }`}
-                >
-                  {index === 0 ? 'Current Plan' : 'Upgrade Now'}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="p-4 border-t border-gray-700 text-center text-xs md:text-sm text-gray-400">
-          Need help choosing a plan? <a href="#" className="text-blue-400 hover:underline">Contact us</a>
-        </div>
-      </div>
-    </div>
-  );
-  };
-
-
-
-export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading } = useAuth();
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-        </svg>
-      </div>
-    );
-  }
-  return user ? <>{children}</> : <Navigate to="/login" />;
-};
+export default AI;
