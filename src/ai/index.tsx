@@ -8,7 +8,6 @@ import {
   Menu,
   X,
   Expand,
-  ListCollapse,
   UnfoldHorizontal,
 } from 'lucide-react';
 
@@ -75,7 +74,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
 };
 
 // Message Component - Enhanced for mobile
-const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
+const MessageBubble: React.FC<{ message: Message, model: string }> = ({ message, model }) => {
   if (message.isMultiResponse && message.responses) {
     return (
       <div className="mb-6">
@@ -111,38 +110,41 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
       </div>
     );
   }
+  if (message.model === model) {
+    return (<>
+      <div className={`flex items-start space-x-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
+        {message.role === 'assistant' && (
+          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+          </div>
+        )}
 
-  return (
-    <div className={`flex items-start space-x-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
-      {message.role === 'assistant' && (
-        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
-          <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+        <div className={`max-w-xs sm:max-w-md md:max-w-lg p-3 sm:p-4 rounded-lg ${message.role === 'user'
+          ? 'bg-blue-600 text-white ml-8 sm:ml-12'
+          : 'bg-gray-700 text-gray-100 mr-8 sm:mr-12'
+          }`}>
+          <p className="whitespace-pre-wrap text-sm sm:text-base">{message.content}</p>
+          <div className="text-xs opacity-70 mt-2 flex items-center space-x-2">
+            <span>{message.timestamp.toLocaleTimeString()}</span>
+            {message.model && (
+              <>
+                <span>•</span>
+                <span className="font-medium">{message.model}</span>
+              </>
+            )}
+          </div>
         </div>
-      )}
 
-      <div className={`max-w-xs sm:max-w-md md:max-w-lg p-3 sm:p-4 rounded-lg ${message.role === 'user'
-        ? 'bg-blue-600 text-white ml-8 sm:ml-12'
-        : 'bg-gray-700 text-gray-100 mr-8 sm:mr-12'
-        }`}>
-        <p className="whitespace-pre-wrap text-sm sm:text-base">{message.content}</p>
-        <div className="text-xs opacity-70 mt-2 flex items-center space-x-2">
-          <span>{message.timestamp.toLocaleTimeString()}</span>
-          {message.model && (
-            <>
-              <span>•</span>
-              <span className="font-medium">{message.model}</span>
-            </>
-          )}
-        </div>
+        {message.role === 'user' && (
+          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <User className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+          </div>
+        )}
       </div>
+    </>)
+  }
+  return <></>
 
-      {message.role === 'user' && (
-        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-          <User className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-        </div>
-      )}
-    </div>
-  );
 };
 
 const ChatArea: React.FC<ChatAreaProps> = ({
@@ -204,6 +206,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                     {messages.map((message) => (
                       <MessageBubble
                         key={message.id}
+                        model={model.id}
                         message={
                           message.isMultiResponse
                             ? {
@@ -452,19 +455,20 @@ const AI: React.FC = () => {
     setIsLoading(true);
 
     if (selectedModels.length >= 1) {
-      const userMessage: Message = {
-        id: generateId(),
+
+      const multiResponseId = generateId();
+      const userMessage: Message[] = selectedModels.filter((model) => model.selected).map(model => ({
+        id: multiResponseId,
         content: message,
-        role: 'user',
+        role: 'user' as 'user',
+        model: model.id,
         timestamp: new Date(),
-      };
+      })) ?? []
 
       setMessages(prev => {
-        console.log(prev)
-        return [...prev, userMessage]
+        return [...prev, ...userMessage]
       });
-      // Create initial multi-response message with loading states
-      const multiResponseId = generateId();
+      // Create initial multi-response message with loading state
       const multiResponseMessage: Message = {
         id: multiResponseId,
         content: '',
