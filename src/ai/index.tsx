@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Send,
   User,
@@ -7,13 +7,13 @@ import {
   Users,
   Menu,
   X,
-  Settings
+  Expand,
 } from 'lucide-react';
+
 import type { AIModel, Message } from '../lib/type';
 import { Logo } from '../components/logo';
-import { NewChatButton, ProjectsSection, } from './Component/sidebar';
-import { Route, Routes, useNavigate } from 'react-router-dom';
-import ProfileSettings from './profileSettings';
+import { NewChatButton, ProjectsSection } from './Component/sidebar';
+import { Route, Routes } from 'react-router-dom';
 import { createApiClient } from '../lib/apiService';
 
 interface TopBarProps {
@@ -25,14 +25,17 @@ interface TopBarProps {
 interface ChatAreaProps {
   messages: Message[];
   isLoading: boolean;
-  selectedModels: string[];
+  selectedModels: AIModel[];
+  onToggleModelActive: (modelId: string) => void;
+  collapsedModels: string[];
+  onToggleCollapse: (modelId: string, val: boolean) => void;
 }
 interface InputAreaProps {
   message: string;
   onMessageChange: (message: string) => void;
   onSendMessage: () => void;
   isLoading: boolean;
-  selectedModels: string[];
+  selectedModels: AIModel[];
 }
 
 const providerMapping: { [key: string]: string } = {
@@ -135,7 +138,13 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
   );
 };
 
-const ChatArea: React.FC<ChatAreaProps> = ({ messages, isLoading, selectedModels }) => {
+const ChatArea: React.FC<ChatAreaProps> = ({
+  messages,
+  selectedModels,
+  onToggleModelActive,
+  collapsedModels,
+  onToggleCollapse
+}) => {
   return (
     <div className="flex flex-col h-screen w-full mx-auto bg-gray-900 text-gray-100 shadow-xl overflow-hidden">
       {selectedModels.length === 0 ? (
@@ -149,71 +158,95 @@ const ChatArea: React.FC<ChatAreaProps> = ({ messages, isLoading, selectedModels
           </div>
         </div>
       ) : (
-          <div
-            className="flex-1 flex overflow-x-auto  w-full scroll-smooth bg-gray-850 scrollbar-hide"
-          >
-            {selectedModels.map((model, index) => (
-              <div
-                key={model}
-                className={`flex flex-col h-full min-w-0
-    w-full flex-shrink-0
-    md:flex-1 md:min-w-1/4 md:w-[calc(100%/${selectedModels.length})]
-    ${index < selectedModels.length - 1 ? "border-r border-gray-700" : ""}
-  `}
-              >
-                <ChatAreaMassage messages={messages}
-                  isLoading={isLoading}
-                  selectedModels={selectedModels}
-                  model={model} />
-              </div>
-            ))}
-        </div>
+          <div className="flex-1 flex overflow-x-auto w-full scroll-smooth bg-gray-850 scrollbar-hide">
+            {selectedModels.map((model, index) => {// Assuming all selected models are active
+              if (model.isExpend && model.selected) {
+                return (
+                  <div
+                    key={model.id}
+                    className={`flex flex-col h-full min-w-0 transition-all duration-300
+                    ${index < selectedModels.length - 1 ? "border-r border-gray-700" : ""}
+                  `}
+                    style={{
+                      width: `calc((100% - ${collapsedModels.length * 80}px) / ${selectedModels.length - collapsedModels.length})`,
+                      flex: '1 1 auto'
+                    }}
+                  >
+                    <div className="sticky top-0 bg-gray-800 py-2 px-4 flex items-center z-10 justify-between">
+                      <span className="font-medium">{model.name}</span>
+                      <div className='flex gap-4'>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={model.selected}
+                            onChange={() => onToggleModelActive(model.id)}
+                            className="sr-only peer"
+                          />
+                          <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer ${model.selected ? 'peer-checked:bg-blue-600' : ''} peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all`}></div>
+                        </label>
+                        <button
+                          onClick={() => onToggleCollapse(model.id, false)}
+                          className="text-gray-400 hover:text-white"
+                        >
+                          <Expand className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                      {messages.map((message) => (
+                        <MessageBubble
+                          key={message.id}
+                          message={
+                            message.isMultiResponse
+                              ? {
+                                ...message,
+                                responses: message.responses?.filter((res) => res.model === model.id) ?? []
+                              }
+                              : message
+                          }
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              } else {
+                return (
+                  <div
+                    key={model.id}
+                    className="flex flex-col h-full min-w-0 border-r border-gray-700 last:border-r-0"
+                    style={{ width: '80px', flex: '0 0 auto' }}
+                  >
+                    <div className="sticky top-0 bg-gray-800 py-2 px-3 flex flex-col items-center justify-between h-full z-10">
+                      <span className="font-medium text-xs text-center mb-2">{model.name}</span>
+                      <div className='flex flex-col items-center gap-3'>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={model.selected}
+                            onChange={() => onToggleModelActive(model.id)}
+                            className="sr-only peer"
+                          />
+                          <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer ${model.selected ? 'peer-checked:bg-blue-600' : ''} peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all`}></div>
+                        </label>
+                        <button
+                          onClick={() => onToggleCollapse(model.id, true)}
+                          className="text-gray-400 hover:text-white"
+                        >
+                          <Expand className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
 
+              }
+            })}
+        </div>
       )}
     </div>
   );
 };
 
-interface ChatAreaMassageProps {
-  messages: Message[];
-  isLoading: boolean;
-  selectedModels: string[];
-  model: string;
-}
-const ChatAreaMassage: React.FC<ChatAreaMassageProps> = ({ messages, isLoading, selectedModels, model }) => {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading, selectedModels]);
-  return <>
-    <div className="sticky top-0 bg-gray-800 py-2 px-4 flex items-center z-10">
-      <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-      <span className="font-medium">{model}</span>
-    </div>
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-      <>
-
-        {messages.map((message) => {
-          { JSON.stringify(message) }
-          return (
-          <MessageBubble
-            key={message.id}
-            message={
-              message.isMultiResponse
-                ? {
-                  ...message,
-                  responses: message.responses?.filter((res) => res.model === model) ?? []
-                }
-                : message
-            }
-          />
-          )
-        })}
-      </>
-      <div ref={messagesEndRef} />
-    </div>
-  </>
-}
 // Input Area Component - Updated for mobile
 const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendMessage, isLoading, selectedModels }) => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -269,48 +302,114 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
 };
 
 // Main App Component
+const modelsComponent = [
+  {
+    id: 'chatgpt',
+    name: 'OpenAI GPT-3.5',
+    color: 'bg-emerald-500',
+    enabled: true,
+    selected: true,
+    isExpend: true
+  },
+  {
+    id: 'gemini',
+    name: 'Gemini 1.5 Flash',
+    color: 'bg-blue-500',
+    enabled: true,
+    selected: true,
+    isExpend: true
+  },
+  {
+    id: 'deepseek',
+    name: 'DeepSeek Chat',
+    color: 'bg-purple-500',
+    enabled: true,
+    selected: true,
+    isExpend: true
+  },
+  {
+    id: 'perplexity',
+    name: 'Mistral Large',
+    color: 'bg-orange-500',
+    enabled: true,
+    selected: false,
+    isExpend: false
+  }
+]
+
 const AI: React.FC = () => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [models, setModels] = useState<AIModel[]>([
-    {
-      id: 'chatgpt',
-      name: 'OpenAI GPT-3.5',
-      color: 'bg-emerald-500',
-      enabled: true,
-      selected: true
-    },
-    {
-      id: 'gemini',
-      name: 'Gemini 1.5 Flash',
-      color: 'bg-blue-500',
-      enabled: true,
-      selected: true
-    },
-    {
-      id: 'deepseek',
-      name: 'DeepSeek Chat',
-      color: 'bg-purple-500',
-      enabled: true,
-      selected: true
-    },
-    {
-      id: 'perplexity',
-      name: 'Mistral Large',
-      color: 'bg-orange-500',
-      enabled: true,
-      selected: true
-    }
-  ]);
+  const [models, setModels] = useState<AIModel[]>(modelsComponent);
+  const [collapsedModels, setCollapsedModels] = useState<string[]>([]);
   const apiService = createApiClient('');
-  const selectedModels = models.filter(m => m.selected && m.enabled).map(m => m.id);
+  const selectedModels = models.filter(m => m.enabled);
   const generateId = () => Math.random().toString(36).substr(2, 9);
-  const handleModelToggleSelect = (modelId: string) => {
-    setModels(prev => prev.map(model =>
-      model.id === modelId ? { ...model, selected: !model.selected } : model
-    ));
+
+  const handleToggleModelActive = (modelId: string) => {
+    setModels((prev) => {
+      const selectedCount = prev.filter(m => m.selected).length;
+      const expandedCount = prev.filter(m => m.isExpend).length;
+
+      return prev.map((model) => {
+        if (model.id === modelId) {
+          const willBeSelected = !model.selected;
+
+          // Prevent selecting more than 3
+          if (willBeSelected && selectedCount >= 3) return model;
+
+          // Prevent deselecting the last selected model
+          if (!willBeSelected && selectedCount <= 1) return model;
+
+          return {
+            ...model,
+            selected: willBeSelected,
+            isExpend: willBeSelected
+              ? expandedCount < 3
+                ? true
+                : model.isExpend // Don't expand if already 3 are expanded
+              : false, // collapse on deselect
+          };
+        }
+
+        return model;
+      });
+    });
   };
+
+
+  const handleToggleCollapse = (modelId: string, expand: boolean) => {
+    setModels((prev) => {
+      const expandedCount = prev.filter(m => m.isExpend).length;
+      const selectedCount = prev.filter(m => m.selected).length;
+
+      return prev.map((model) => {
+        if (model.id === modelId) {
+          if (expand) {
+            // Enforce max 3 expanded
+            if (expandedCount >= 3) return model;
+            return {
+              ...model,
+              isExpend: true,
+              selected: true, // expanding means selecting
+            };
+          } else {
+            // Enforce min 1 expanded and selected
+            if (expandedCount <= 1 || selectedCount <= 1) return model;
+            return {
+              ...model,
+              isExpend: false,
+              selected: false, // collapse = deselect
+            };
+          }
+        }
+        return model;
+      });
+    });
+  };
+
+
   const handleSendMessage = async () => {
     if (!message.trim() || isLoading || selectedModels.length === 0) return;
 
@@ -335,8 +434,8 @@ const AI: React.FC = () => {
         role: 'assistant',
         timestamp: new Date(),
         isMultiResponse: true,
-        responses: selectedModels.map(model => ({
-          model,
+        responses: selectedModels.filter((model) => model.selected).map(model => ({
+          model: model.id,
           content: '',
           loading: true,
         })),
@@ -345,7 +444,7 @@ const AI: React.FC = () => {
       setMessages(prev => [...prev, multiResponseMessage]);
 
       try {
-      const responses = await apiService.sendQuery(currentMessage, selectedModels);
+        const responses = await apiService.sendQuery(currentMessage, selectedModels.filter((model) => model.selected).map((model) => model.id));
 
         // Update ONLY the multiResponseMessage
         setMessages(prev =>
@@ -353,12 +452,12 @@ const AI: React.FC = () => {
             if (msg.id === multiResponseId) {
               return {
                 ...msg,
-                responses: selectedModels.map(model => {
+                responses: selectedModels.filter((model) => model.selected).map(model => {
                   const response = (responses as unknown as any[])?.find(
-                    (res: any) => res.provider === providerMapping[model]
+                    (res: any) => res.provider === providerMapping[model.id]
                   );
                   return {
-                    model,
+                    model: model.id,
                     content: response?.content ?? '',
                     loading: false,
                   };
@@ -375,22 +474,14 @@ const AI: React.FC = () => {
 
     setIsLoading(false);
   };
-
-  const handleToggleModel = (modelId: string) => {
-    setModels(prev => prev.map(model =>
-      model.id === modelId ? { ...model, enabled: !model.enabled } : model
-    ));
-  };
-
+  const [isOpen, setIsOpen] = useState(false);
   const handleNewChat = () => {
     setMessages([]);
     setMessage('');
+    setCollapsedModels([]);
   };
-  const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
-  const setIsSettingsOpen = () => {
-    navigate('/app/profile');
-  }
+
+
   return (
     <div className="flex h-screen bg-gray-900 text-white">
       <>
@@ -400,8 +491,6 @@ const AI: React.FC = () => {
             onClick={() => setIsOpen(false)}
           ></div>
         )}
-
-        {/* Sidebar - Full screen on mobile */}
         <div className={`
                    fixed lg:static inset-0 lg:inset-y-0 lg:left-0 z-40
                    w-full lg:w-64 bg-gray-800 border-r border-gray-700 flex flex-col
@@ -425,28 +514,20 @@ const AI: React.FC = () => {
             }} />
           </div>
           <ProjectsSection />
-          <div className="flex-1"></div>
-          <div className="p-4 border-t border-gray-700">
-            <button onClick={setIsSettingsOpen} className="w-full mt-2 text-gray-400 hover:text-white flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-700 transition-colors">
-              <Settings className="w-4 h-4" />
-              <span className="text-sm">Settings</span>
-            </button>
-          </div>
         </div>
       </>
       <div className="flex-1 flex flex-col min-w-0">
         <Routes>
-          <Route path="/profile" element={<ProfileSettings />} />
           <Route path="/ai-app" element={<>
-            <TopBar
-              models={models}
-              onModelToggleSelect={handleModelToggleSelect}
-              onToggleModel={handleToggleModel}
-              onMenuClick={() => setIsOpen(!isOpen)}
-            />
-            <ChatArea messages={messages}
+            <TopBar models={[]} onModelToggleSelect={handleToggleModelActive} onToggleModel={() => { }} onMenuClick={() => setIsOpen(true)} />
+            <ChatArea
+              messages={messages}
               isLoading={isLoading}
-              selectedModels={selectedModels} />
+              selectedModels={selectedModels}
+              onToggleModelActive={handleToggleModelActive}
+              collapsedModels={collapsedModels}
+              onToggleCollapse={handleToggleCollapse}
+            />
             <InputArea
               message={message}
               onMessageChange={setMessage}

@@ -4,6 +4,7 @@ export interface AIModel {
   color: string;
   enabled: boolean;
   selected: boolean;
+  isExpend: boolean;
 }
 
 export interface Message {
