@@ -192,7 +192,10 @@ const ChatAreaMassage: React.FC<ChatAreaMassageProps> = ({ messages, isLoading, 
     </div>
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
       <>
-        {messages.map((message) => (
+
+        {messages.map((message) => {
+          { JSON.stringify(message) }
+          return (
           <MessageBubble
             key={message.id}
             message={
@@ -204,7 +207,8 @@ const ChatAreaMassage: React.FC<ChatAreaMassageProps> = ({ messages, isLoading, 
                 : message
             }
           />
-        ))}
+          )
+        })}
       </>
       <div ref={messagesEndRef} />
     </div>
@@ -324,8 +328,9 @@ const AI: React.FC = () => {
 
     if (selectedModels.length >= 1) {
       // Create initial multi-response message with loading states
+      const multiResponseId = generateId();
       const multiResponseMessage: Message = {
-        id: generateId(),
+        id: multiResponseId,
         content: '',
         role: 'assistant',
         timestamp: new Date(),
@@ -333,24 +338,39 @@ const AI: React.FC = () => {
         responses: selectedModels.map(model => ({
           model,
           content: '',
-          loading: true
-        }))
+          loading: true,
+        })),
       };
 
       setMessages(prev => [...prev, multiResponseMessage]);
+
+      try {
       const responses = await apiService.sendQuery(currentMessage, selectedModels);
-      setMessages(prev => prev.map(msg => {
-        return {
-          ...msg,
-          responses: selectedModels.map(model => {
-            return ({
-              model,
-              content: (responses as unknown as any[])?.filter((res: any) => res.provider === providerMapping[model])?.[0]?.content ?? '',
-              loading: false
-            })
+
+        // Update ONLY the multiResponseMessage
+        setMessages(prev =>
+          prev.map(msg => {
+            if (msg.id === multiResponseId) {
+              return {
+                ...msg,
+                responses: selectedModels.map(model => {
+                  const response = (responses as unknown as any[])?.find(
+                    (res: any) => res.provider === providerMapping[model]
+                  );
+                  return {
+                    model,
+                    content: response?.content ?? '',
+                    loading: false,
+                  };
+                }),
+              };
+            }
+            return msg; // keep old messages unchanged
           })
-        };
-      }));
+        );
+      } catch (error) {
+        console.error(error);
+      }
     }
 
     setIsLoading(false);
