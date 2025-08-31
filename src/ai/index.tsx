@@ -210,6 +210,11 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                   </div>
                 );
               } else {
+                return <></>;
+              }
+            })}
+            {selectedModels.map((model) => {// Assuming all selected models are active
+              if (!model.isExpend && !model.selected) {
                 return (
                   <div
                     key={model.id}
@@ -238,7 +243,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                     </div>
                   </div>
                 );
-
+              } else {
+                return null
               }
             })}
         </div>
