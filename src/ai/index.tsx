@@ -452,6 +452,17 @@ const AI: React.FC = () => {
     setIsLoading(true);
 
     if (selectedModels.length >= 1) {
+      const userMessage: Message = {
+        id: generateId(),
+        content: message,
+        role: 'user',
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => {
+        console.log(prev)
+        return [...prev, userMessage]
+      });
       // Create initial multi-response message with loading states
       const multiResponseId = generateId();
       const multiResponseMessage: Message = {
