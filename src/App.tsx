@@ -1,12 +1,12 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LandingPage from './landingPage';
-import { ProtectedRoute } from './ai';
+
 import { IntlProvider } from 'react-intl/index';
 import enMessages from './translations/en.json';
 import Login from './modules/login/login';
 import Register from './modules/register/register';
-import { AuthProvider } from './AuthContext';
+import { AuthProvider, ProtectedRoute } from './AuthContext';
 import AIFiestaClone from './ai';
 
 const App: React.FC = () => {
