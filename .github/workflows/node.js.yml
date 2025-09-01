@@ -25,6 +25,9 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x]
     needs: build   # ✅ only runs after build passes
     if: github.ref == 'refs/heads/main'  # ✅ only on main branch
     steps:
