@@ -14,7 +14,6 @@ import {
   ChevronDown,
   Square,
   Mic,
-  Edit3,
   Copy,
   Zap,
 } from 'lucide-react';
@@ -174,23 +173,8 @@ const MessageBubble: React.FC<{
   onRegenerate?: () => void,
   onCopy?: (content: string) => void,
   onRate?: (rating: boolean) => void
-}> = ({ message, model, onEdit, onRegenerate, onCopy }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedContent, setEditedContent] = useState(message.content);
+}> = ({ message, model, onRegenerate, onCopy }) => {
   const [showActions, setShowActions] = useState(false);
-
-  const handleSaveEdit = () => {
-    if (onEdit && editedContent.trim() && editedContent !== message.content) {
-      onEdit(editedContent);
-    }
-    setIsEditing(false);
-  };
-
-  const handleCancelEdit = () => {
-    setEditedContent(message.content);
-    setIsEditing(false);
-  };
-
   if (message.isMultiResponse && message.responses) {
     return (
       <div className="mb-6 group relative">
@@ -282,7 +266,7 @@ const MessageBubble: React.FC<{
 
 
 
-          {showActions && !isEditing && message.role === 'user' && (
+          {showActions && message.role === 'user' && (
             <div className="absolute  right-0 bg-gray-800 rounded-lg p-1 shadow-lg flex space-x-1">
               <button
                 onClick={() => onCopy?.(message.content)}
