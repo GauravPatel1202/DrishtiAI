@@ -527,7 +527,7 @@ const exampleQuestions = [
   "Write a poem about artificial intelligence",
   "Compare Next.js and Remix frameworks"
 ];
-
+const ONE_HOUR = 60 * 60 * 1000;
 const AI: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -771,19 +771,36 @@ const AI: React.FC = () => {
   };
   const [showDonation, setShowDonation] = useState(false);
 
+
+
   useEffect(() => {
-    setShowDonation(true);
-    const timer = setInterval(() => {
+    const lastClosed = localStorage.getItem('lastDonationClosed');
+    const now = Date.now();
+
+    if (!lastClosed || now - parseInt(lastClosed, 10) > ONE_HOUR) {
       setShowDonation(true);
-    }, 60 * 60 * 1000); // 1 hour
+    }
+
+    const timer = setInterval(() => {
+      const lastClosed = localStorage.getItem('lastDonationClosed');
+      const now = Date.now();
+
+      if (!lastClosed || now - parseInt(lastClosed, 10) > ONE_HOUR) {
+        setShowDonation(true);
+      }
+    }, ONE_HOUR);
+
     return () => clearInterval(timer);
   }, []);
-
+  const handleClose = () => {
+    setShowDonation(false);
+    localStorage.setItem('lastDonationClosed', Date.now().toString());
+  };
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
       {showDonation && (
-        <DonationPopup onClose={() => setShowDonation(false)} />
+        <DonationPopup onClose={() => handleClose()} />
       )}
       <>
         {isOpen && (
