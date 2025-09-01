@@ -8,6 +8,8 @@ import Login from './modules/login/login';
 import Register from './modules/register/register';
 import { AuthProvider, ProtectedRoute } from './AuthContext';
 import AIFiestaClone from './ai';
+import SignUpForm from './signUp';
+import LoginForm from './login';
 
 const App: React.FC = () => {
   const locale = 'en';
