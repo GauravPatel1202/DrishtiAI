@@ -233,7 +233,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     <div className="flex flex-col h-screen w-full mx-auto bg-gray-900 text-gray-100 shadow-xl overflow-hidden">
       <div className="flex-1 flex overflow-x-auto w-full scroll-smooth bg-gray-850 scrollbar-hide">
         {selectedModels.map((model, index) => {// Assuming all selected models are active
-          if (model.isExpend && model.selected) {
+          if (model.enabled && model.isExpend && model.selected) {
             return (
               <div
                 key={model.id}
@@ -294,7 +294,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           }
         })}
         {selectedModels.map((model) => {// Assuming all selected models are active
-          if (!model.isExpend && !model.selected) {
+          if (model.enabled && !model.isExpend && !model.selected) {
             return (
 
               <div
@@ -314,6 +314,53 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                       <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer ${model.selected ? 'peer-checked:bg-blue-600' : ''} peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all`}></div>
                     </label>
                     <button
+                      onClick={() => onToggleCollapse(model.id, true)}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      <UnfoldHorizontal className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            );
+          } else {
+            return null
+          }
+        })}
+        {selectedModels.map((model) => {// Assuming all selected models are active
+          if (!model.enabled) {
+            return (
+              <div
+                key={model.id}
+                className="flex flex-col md:flex-col h-full min-w-0 border-r border-gray-700 last:border-r-0 w-12 md:w-20 flex-none"
+              >
+                <div className="sticky top-0 bg-gray-800 py-2 px-3 opacity-10 flex flex-col items-center justify-between h-full z-10">
+                  <span className="font-medium text-xs text-center mb-2">{model.name}</span>
+                  <div className="text-center p-1">
+                    <h1 className="text-sm font-bold text-gray-300 uppercase break-all">
+                      Coming Soon
+                    </h1>
+                    <p className="text-gray-400 text-sm">
+                      We’re working on something amazing. Stay tuned!
+                    </p>
+                  </div>
+                  <div className='flex flex-col items-center gap-3'>
+
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={model.selected}
+                        disabled
+                        onChange={() => onToggleModelActive(model.id)}
+                        className="sr-only peer"
+                      />
+                      <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer ${model.selected ? 'peer-checked:bg-blue-600' : ''} peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all`}>
+
+                      </div>
+                    </label>
+                    <button
+                      disabled
                       onClick={() => onToggleCollapse(model.id, true)}
                       className="text-gray-400 hover:text-white"
                     >
@@ -517,6 +564,32 @@ const modelsComponent = [
     enabled: true,
     selected: false,
     isExpend: false
+  },
+  {
+    id: 'test',
+    name: 'test',
+    color: 'bg-orange-500',
+    enabled: false,
+    selected: true,
+    isExpend: true
+  }
+  ,
+  {
+    id: 'test1',
+    name: 'test1',
+    color: 'bg-orange-500',
+    enabled: false,
+    selected: true,
+    isExpend: true
+  }
+  ,
+  {
+    id: 'test2',
+    name: 'test2',
+    color: 'bg-orange-500',
+    enabled: false,
+    selected: true,
+    isExpend: true
   }
 ]
 
@@ -537,7 +610,7 @@ const AI: React.FC = () => {
   const [models, setModels] = useState<AIModel[]>(modelsComponent);
   const [collapsedModels, setCollapsedModels] = useState<string[]>([]);
   const apiService = createApiClient();
-  const selectedModels = models.filter(m => m.enabled);
+  const selectedModels = models;
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
   const handleToggleModelActive = (modelId: string) => {
@@ -622,7 +695,7 @@ const AI: React.FC = () => {
     setIsLoading(true);
     if (selectedModels.length >= 1) {
       const multiResponseId = generateId();
-      const userMessage: Message[] = selectedModels.filter((model) => model.selected).map(model => ({
+      const userMessage: Message[] = selectedModels.filter((model) => model.enabled && model.selected).map(model => ({
         id: multiResponseId,
         content: message,
         role: 'user' as 'user',
@@ -639,7 +712,7 @@ const AI: React.FC = () => {
         role: 'assistant',
         timestamp: new Date(),
         isMultiResponse: true,
-        responses: selectedModels.filter((model) => model.selected).map(model => ({
+        responses: selectedModels.filter((model) => model.enabled && model.selected).map(model => ({
           model: model.id,
           content: '',
           loading: true,
@@ -649,13 +722,13 @@ const AI: React.FC = () => {
       setMessages(prev => [...prev, multiResponseMessage]);
 
       try {
-        const responses = await apiService.sendQuery(currentMessage, selectedModels.filter((model) => model.selected).map((model) => model.id));
+        const responses = await apiService.sendQuery(currentMessage, selectedModels.filter((model) => model.enabled && model.selected).map((model) => model.id));
         setMessages(prev =>
           prev.map(msg => {
             if (msg.id === multiResponseId) {
               return {
                 ...msg,
-                responses: selectedModels.filter((model) => model.selected).map(model => {
+                responses: selectedModels.filter((model) => model.enabled && model.selected).map(model => {
                   const response = (responses as unknown as any[])?.find(
                     (res: any) => res.provider === providerMapping[model.id]
                   );
