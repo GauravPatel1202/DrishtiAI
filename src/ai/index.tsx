@@ -24,6 +24,7 @@ import { Logo } from '../components/logo';
 import { NewChatButton, ProjectsSection } from './Component/sidebar';
 import { Route, Routes } from 'react-router-dom';
 import { createApiClient } from '../lib/apiService';
+import { DonationPopup } from '../components/DonationPopup';
 
 interface TopBarProps {
   models: AIModel[];
@@ -884,10 +885,22 @@ const AI: React.FC = () => {
 
     setIsLoading(false);
   };
+  const [showDonation, setShowDonation] = useState(false);
+
+  useEffect(() => {
+    setShowDonation(true);
+    const timer = setInterval(() => {
+      setShowDonation(true);
+    }, 60 * 60 * 1000); // 1 hour
+    return () => clearInterval(timer);
+  }, []);
 
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
+      {showDonation && (
+        <DonationPopup onClose={() => setShowDonation(false)} />
+      )}
       <>
         {isOpen && (
           <div
