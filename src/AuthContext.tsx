@@ -33,21 +33,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Implement your login API call here
     try {
-      // Mock login for demonstration
-      if (email && password) {
-        const mockUser: User = {
-          id: '1',
-          email,
-          name: 'John Doe',
-          plan: 'free'
-        };
-        setUser(mockUser);
-        localStorage.setItem('user', JSON.stringify(mockUser));
+      const response = await fetch(`${import.meta.env.VITE_AUTH_API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const user: User = data.user;
+        setUser(user);
+        localStorage.setItem('user', JSON.stringify(user));
+        // If token is provided, store it
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+        }
         return true;
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Login failed:', response.status, errorData);
+        return false;
       }
-      return false;
     } catch (error) {
       console.error('Login error:', error);
       return false;
@@ -55,30 +64,46 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const register = async (name: string, email: string, password: string): Promise<boolean> => {
-    // Implement your registration API call here
     try {
-      // Mock registration for demonstration
-      if (name && email && password) {
-        const mockUser: User = {
-          id: '1',
-          email,
-          name,
-          plan: 'free'
-        };
-        setUser(mockUser);
-        localStorage.setItem('user', JSON.stringify(mockUser));
+      const response = await fetch(`${import.meta.env.VITE_AUTH_API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      if (response.ok) {
+        // Registration successful, but do not log in yet
+        // User will need to login separately
         return true;
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Registration failed:', response.status, errorData);
+        return false;
       }
-      return false;
     } catch (error) {
       console.error('Registration error:', error);
       return false;
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${import.meta.env.VITE_AUTH_API_URL}/api/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     // Also clear chat messages from localStorage if needed
   };
 

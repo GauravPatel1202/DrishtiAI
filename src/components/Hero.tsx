@@ -1,13 +1,22 @@
 // components/Hero.tsx
 import React from "react";
 import gradientBlob from "../assets/images/gradient-blob.png";
-import aiBrain from "../assets/images/image.png"; 
+import aiBrain from "../assets/images/image.png";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../AuthContext";
 
 const Hero: React.FC = () => {
     const navigate = useNavigate();
-    const getstarted = () => {
-        navigate('/app/ai-app');
+    const { user, loading } = useAuth();
+    const getstarted = (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (loading) {
+            navigate('/login');
+        } else if (user) {
+            navigate('/app/ai-app');
+        } else {
+            navigate('/login');
+        }
     }
   return (
       <section className="hero py-16 md:py-24 overflow-hidden">

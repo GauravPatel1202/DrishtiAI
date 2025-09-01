@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Plus, User } from "lucide-react";
 import { useMemo } from "react";
 import { MAX_LIMITS } from "../../lib/config";
 
@@ -10,6 +10,16 @@ export const NewChatButton: React.FC<{ onClick: () => void }> = ({ onClick }) =>
   >
     <Plus className="w-4 h-4" />
     <span>New Chat</span>
+  </button>
+);
+
+export const ProfileButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
+  <button
+    onClick={onClick}
+    className="w-full bg-gray-700 hover:bg-gray-600 rounded-lg p-3 flex items-center justify-center space-x-2 transition-colors"
+  >
+    <User className="w-4 h-4" />
+    <span>Profile</span>
   </button>
 );
 

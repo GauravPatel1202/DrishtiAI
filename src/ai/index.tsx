@@ -21,9 +21,10 @@ import {
 import type { AIModel, Message } from '../lib/type';
 import { Logo } from '../components/logo';
 import { NewChatButton, ProjectsSection } from './Component/sidebar';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import { createApiClient } from '../lib/apiService';
 import { DonationPopup } from '../components/DonationPopup';
+import { useAuth } from '../AuthContext';
 
 interface TopBarProps {
   models: AIModel[];
@@ -611,6 +612,8 @@ const exampleQuestions = [
 ];
 
 const AI: React.FC = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -915,6 +918,24 @@ const AI: React.FC = () => {
             }} />
           </div>
           <ProjectsSection />
+          {user && (
+            <div className="mt-auto p-3 bg-gray-700 rounded-lg mx-4 mb-4">
+              <div className="text-sm text-gray-300">
+                <p className="font-medium">{user.name}</p>
+                <p className="text-xs">{user.email}</p>
+              </div>
+              <button
+                onClick={async () => {
+                  navigate('/');
+                  await logout();
+                  setIsOpen(false);
+                }}
+                className="mt-2 w-full px-3 py-1 bg-gradient-to-br from-[#7c5cff] to-[#00d1ff] text-[#0b0d10] text-xs rounded font-semibold cursor-pointer transition-all duration-300 shadow-lg hover:shadow-xl"
+              >
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </>
       <div className="flex-1 flex flex-col min-w-0">

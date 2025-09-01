@@ -24,7 +24,7 @@ const Register: React.FC = () => {
     setLoading(true);
     const success = await register(name, email, password);
     if (success) {
-      navigate('/app/ai-app');
+      navigate('/login');
     } else {
       setError('Failed to create account');
     }

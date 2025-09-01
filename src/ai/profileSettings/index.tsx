@@ -1,10 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../AuthContext';
 
 type ModelKey = 'chatgpt' | 'gemini' | 'deepseek' | 'perplexity' | 'anthropic' | 'xai';
 
 const ProfileSettings: React.FC = () => {
-    const [email, setEmail] = useState('kingp@gmail.com');
-    const [fullName, setFullName] = useState('Gaurav Patel');
+    const {logout } = useAuth();
+    const [email, setEmail] = useState('');
+    const [fullName, setFullName] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${import.meta.env.VITE_AUTH_API_URL}/api/auth/profile`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token && { 'Authorization': `Bearer ${token}` }),
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const profileUser = data.user;
+                    setEmail(profileUser.email || '');
+                    setFullName(profileUser.name || '');
+                } else {
+                    setError('Failed to load profile');
+                }
+            } catch (err) {
+                setError('Error loading profile');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProfile();
+    }, []);
     const [selectedModels, setSelectedModels] = useState<Record<ModelKey, boolean>>({
         chatgpt: true,
         gemini: true,
@@ -20,6 +54,30 @@ const ProfileSettings: React.FC = () => {
             [model]: !prev[model]
         }));
     };
+
+    if (loading) {
+        return (
+            <div className='overflow-y-auto'>
+                <div className="mx-auto max-w-3xl rounded-xl shadow-md bg-gray-850">
+                    <div className="p-6 sm:p-8">
+                        <div className="text-center">Loading profile...</div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className='overflow-y-auto'>
+                <div className="mx-auto max-w-3xl rounded-xl shadow-md bg-gray-850">
+                    <div className="p-6 sm:p-8">
+                        <div className="text-center text-red-500">{error}</div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className='overflow-y-auto'>
@@ -210,6 +268,19 @@ const ProfileSettings: React.FC = () => {
                             Upgrade to Unlock
                         </button>
                     </div>
+                </section>
+
+                <div className="border-t border-gray-200 my-6"></div>
+
+                {/* Account Actions Section */}
+                <section>
+                    <h2 className="text-lg font-semibold  mb-4">Account actions</h2>
+                    <button
+                        onClick={() => logout()}
+                        className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                    >
+                        Logout
+                    </button>
                 </section>
             </div>
         </div>
