@@ -1,6 +1,7 @@
 // AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
+import { createApiClient } from './lib/apiService';
 
 interface User {
   id: string;
@@ -22,6 +23,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const apiClient = createApiClient()
+
 
   useEffect(() => {
     // Check if user is logged in on app load
@@ -34,20 +37,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_AUTH_API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
+      const response = await apiClient.login(email, password);
       if (response.ok) {
         const data = await response.json();
         const user: User = data.user;
         setUser(user);
         localStorage.setItem('user', JSON.stringify(user));
-        // If token is provided, store it
         if (data.token) {
           localStorage.setItem('token', data.token);
         }
@@ -65,21 +60,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const register = async (name: string, email: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_AUTH_API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, password }),
-      });
-
+      const response = await apiClient.register(name, email, password);
       if (response.ok) {
-        // Registration successful, but do not log in yet
-        // User will need to login separately
         return true;
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Registration failed:', response.status, errorData);
+        console.error('Registration failed');
         return false;
       }
     } catch (error) {
@@ -89,26 +74,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      await fetch(`${import.meta.env.VITE_AUTH_API_URL}/api/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` }),
-        },
-      });
-    } catch (error) {
+    const token = localStorage.getItem('token') ?? "";
+    await apiClient.logout(token).then(() => {
+      setUser(null);
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+    }).catch((error) => {
       console.error('Logout error:', error);
-    }
-    setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    // Also clear chat messages from localStorage if needed
+    });
   };
-
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider
+      value={{ user, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
