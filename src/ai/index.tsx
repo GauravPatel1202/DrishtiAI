@@ -88,85 +88,6 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   );
 };
 
-// Message Component - Enhanced for mobile
-// const MessageBubble: React.FC<{
-//   message: Message, model: string, onEdit?: (newContent: string) => void,
-//   onRegenerate?: () => void,
-//   onCopy?: (content: string) => void,
-//   onRate?: (rating: boolean) => void
-// }> = ({ message, model, onEdit, onRegenerate, onCopy, onRate }) => {
-//   if (message.isMultiResponse && message.responses) {
-//     return (
-//       <div className="mb-6">
-//         {message.responses.map((response, index) => (
-//           <>
-//             <div className="flex items-center space-x-2 mb-3">
-//               <Users className="w-5 h-5 text-blue-400" />
-//               <span className="text-sm text-gray-400">
-//                 Responses from {message.responses?.length ?? 0} models • {message.timestamp.toLocaleTimeString()}
-//               </span>
-//             </div>
-
-//             <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
-
-//               <div key={index} className="bg-gray-700 rounded-lg p-4 border-l-4 border-gray-600">
-//                 <div className="flex items-center space-x-2 mb-2">
-//                   <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-//                   <span className="text-sm font-medium text-orange-400">{response.model}</span>
-//                   {response.loading && <Loader2 className="w-3 h-3 animate-spin text-blue-400" />}
-//                 </div>
-//                 {response.error ? (
-//                   <p className="text-red-400 text-sm">{response.error}</p>
-//                 ) : response.loading ? (
-//                   <p className="text-gray-400 text-sm">Thinking...</p>
-//                 ) : (
-//                   <p className="text-gray-100 text-sm whitespace-pre-wrap break-all">{response.content}</p>
-//                 )}
-//               </div>
-
-//             </div>
-//           </>
-//         ))}
-//       </div>
-//     );
-//   }
-//   if (message.model === model) {
-//     return (<>
-//       <div className={`flex items-start space-x-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
-//         {message.role === 'assistant' && (
-//           <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
-//             <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-//           </div>
-//         )}
-
-//         <div className={`max-w-xs sm:max-w-md md:max-w-lg p-3 sm:p-4 rounded-lg ${message.role === 'user'
-//           ? 'bg-blue-600 text-white ml-8 sm:ml-12'
-//           : 'bg-gray-700 text-gray-100 mr-8 sm:mr-12'
-//           }`}>
-//           <p className="whitespace-pre-wrap text-sm sm:text-base">{message.content}</p>
-//           <div className="text-xs opacity-70 mt-2 flex items-center space-x-2">
-//             <span>{message.timestamp.toLocaleTimeString()}</span>
-//             {message.model && (
-//               <>
-//                 <span>•</span>
-//                 <span className="font-medium">{message.model}</span>
-//               </>
-//             )}
-//           </div>
-//         </div>
-
-//         {message.role === 'user' && (
-//           <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-//             <User className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-//           </div>
-//         )}
-//       </div>
-//     </>)
-//   }
-//   return <></>
-
-// };
-
 const MessageBubble: React.FC<{
   message: Message,
   model: string,
@@ -253,7 +174,6 @@ const MessageBubble: React.FC<{
 
         >
 
-
           <p className="whitespace-pre-wrap text-sm sm:text-base break-all">{message.content}</p>
           <div className="text-xs opacity-70 mt-2 flex items-center space-x-2">
             <span>{message.timestamp.toLocaleTimeString()}</span>
@@ -264,9 +184,6 @@ const MessageBubble: React.FC<{
               </>
             )}
           </div>
-
-
-
           {showActions && message.role === 'user' && (
             <div className="absolute  right-0 bg-gray-800 rounded-lg p-1 shadow-lg flex space-x-1">
               <button
@@ -631,24 +548,18 @@ const AI: React.FC = () => {
       return prev.map((model) => {
         if (model.id === modelId) {
           const willBeSelected = !model.selected;
-
-          // Prevent selecting more than 3
           if (willBeSelected && selectedCount >= 3) return model;
-
-          // Prevent deselecting the last selected model
           if (!willBeSelected && selectedCount <= 1) return model;
-
           return {
             ...model,
             selected: willBeSelected,
             isExpend: willBeSelected
               ? expandedCount < 3
                 ? true
-                : model.isExpend // Don't expand if already 3 are expanded
-              : false, // collapse on deselect
+                : model.isExpend
+              : false, 
           };
         }
-
         return model;
       });
     });
@@ -663,20 +574,18 @@ const AI: React.FC = () => {
       return prev.map((model) => {
         if (model.id === modelId) {
           if (expand) {
-            // Enforce max 3 expanded
             if (expandedCount >= 3) return model;
             return {
               ...model,
               isExpend: true,
-              selected: true, // expanding means selecting
+              selected: true,
             };
           } else {
-            // Enforce min 1 expanded and selected
             if (expandedCount <= 1 || selectedCount <= 1) return model;
             return {
               ...model,
               isExpend: false,
-              selected: false, // collapse = deselect
+              selected: false,
             };
           }
         }
@@ -692,13 +601,13 @@ const AI: React.FC = () => {
           return {
             ...model,
             isExpend: true,
-            selected: true, // expanding means selecting
+            selected: true,
           };
         } else {
           return {
             ...model,
             isExpend: false,
-            selected: false, // collapse = deselect
+            selected: false,
           };
         }
       });
@@ -708,13 +617,10 @@ const AI: React.FC = () => {
 
   const handleSendMessage = async () => {
     if (!message.trim() || isLoading || selectedModels.length === 0) return;
-
     const currentMessage = message;
     setMessage('');
     setIsLoading(true);
-
     if (selectedModels.length >= 1) {
-
       const multiResponseId = generateId();
       const userMessage: Message[] = selectedModels.filter((model) => model.selected).map(model => ({
         id: multiResponseId,
@@ -727,7 +633,6 @@ const AI: React.FC = () => {
       setMessages(prev => {
         return [...prev, ...userMessage]
       });
-      // Create initial multi-response message with loading state
       const multiResponseMessage: Message = {
         id: multiResponseId,
         content: '',
@@ -745,7 +650,6 @@ const AI: React.FC = () => {
 
       try {
         const responses = await apiService.sendQuery(currentMessage, selectedModels.filter((model) => model.selected).map((model) => model.id));
-        // Update ONLY the multiResponseMessage
         setMessages(prev =>
           prev.map(msg => {
             if (msg.id === multiResponseId) {
@@ -763,14 +667,13 @@ const AI: React.FC = () => {
                 }),
               };
             }
-            return msg; // keep old messages unchanged
+            return msg;
           })
         );
       } catch (error) {
         console.error(error);
       }
     }
-
     setIsLoading(false);
   };
   const [isOpen, setIsOpen] = useState(false);
@@ -785,7 +688,6 @@ const AI: React.FC = () => {
   };
   const handleCopyMessage = (content: string) => {
     navigator.clipboard.writeText(content);
-    // You could add a toast notification here
   };
   const handleEditMessage = (messageId: string, newContent: string) => {
     setMessages(prev =>
@@ -796,16 +698,13 @@ const AI: React.FC = () => {
   };
 
   const handleRateResponse = (messageId: string, modelId: string, rating: boolean) => {
-    // Here you would typically send this feedback to your backend
     console.log(`Rated message ${messageId} from model ${modelId} as ${rating ? 'good' : 'bad'}`);
   }
 
   const handleRegenerateResponse = async (messageId: string) => {
-    // Find the user message that this response is for
     const responseMessage = messages.find(m => m.id === messageId);
     if (!responseMessage || !responseMessage.isMultiResponse) return;
 
-    // Find the user message that preceded this response
     const userMessageIndex = messages.findIndex(m => m.id === messageId) - 1;
     if (userMessageIndex < 0) return;
 
@@ -814,7 +713,6 @@ const AI: React.FC = () => {
 
     setIsLoading(true);
 
-    // Update the response message to show loading state
     setMessages(prev =>
       prev.map(msg => {
         if (msg.id === messageId) {
@@ -830,7 +728,6 @@ const AI: React.FC = () => {
     try {
       const responses = await apiService.sendQuery(userMessage.content, selectedModels.filter((model) => model.selected).map((model) => model.id));
 
-      // Update the response message with new responses
       setMessages(prev =>
         prev.map(msg => {
           if (msg.id === messageId) {
