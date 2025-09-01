@@ -26,8 +26,7 @@ const Login: React.FC = () => {
   };
 
   const handleGoogleLogin = () => {
-    // Handle Google login logic here
-    console.log('Google login clicked');
+
   };
 
   return (

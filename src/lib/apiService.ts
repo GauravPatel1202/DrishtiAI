@@ -9,10 +9,16 @@ const providerMapping: { [key: string]: string } = {
 };
 export interface WACApiClient {
   sendQuery(query: string, model: string[]): Promise<ApiResponse>;
+  login(email: string, password: string): Promise<ApiResponse>;
+  register(name: string, email: string, password: string): Promise<boolean>;
+  logout(token: string): Promise<boolean>;
 }
 
 export const PATHS = Object.freeze({
   QUERIES: () => `/api/queries/query`,
+  LOGIN: () => `/login`,
+  REGISTER: () => `/register`,
+  LOGOUT: () => `logout`,
 });
 
 export const createApiClient = (): WACApiClient => {
@@ -41,7 +47,51 @@ export const createApiClient = (): WACApiClient => {
     return responses;
   };
 
+  const login = async (
+    email: string,
+    password: string
+  ): Promise<ApiResponse> => {
+    const { response } = await fetch(`${BASE_URL}${PATHS.LOGIN()}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    }).then((response) => {
+      return response.json();
+    });
+    return response;
+  };
+
+  const register = async (
+    name: string,
+    email: string,
+    password: string
+  ): Promise<boolean> => {
+    const response = await fetch(`${BASE_URL}${PATHS.REGISTER()}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, email, password }),
+    });
+    return response.ok;
+  };
+
+  const logout = async (token: any) => {
+    const response = await fetch(`${BASE_URL}${PATHS.LOGOUT()}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+    return response.ok;
+  };
   return {
     sendQuery,
+    login,
+    register,
+    logout,
   };
 };
