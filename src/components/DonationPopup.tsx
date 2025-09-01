@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import PaymentQR from './qr';
 
 // --- Donation Popup Component ---
 export const DonationPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -12,30 +13,14 @@ export const DonationPopup: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                 >
                     <X className="w-5 h-5" />
                 </button>
-
                 <h2 className="text-xl font-semibold mb-3 text-center text-white">
                     Support Our Project ❤️
                 </h2>
                 <p className="text-gray-300 text-sm mb-4 text-center">
                     This app is free to use. If you find it useful, please consider donating to support ongoing development.
                 </p>
-
                 <div className="flex justify-center">
-                    <div className="qr-code w-32 h-32 bg-white p-3 rounded-xl flex items-center justify-center transform hover:scale-110 transition-transform duration-300">
-                        <div className="qr-code-inner w-full h-full grid grid-cols-11 grid-rows-11 gap-0.5">
-                            {/* Simplified QR pattern for better aesthetics */}
-                            {[
-                                "1/1/4/4", "1/9/4/12", "9/1/12/4", "2/3/3/4", "3/2/4/3",
-                                "4/5/5/8", "5/4/8/5", "5/8/8/9", "8/5/9/8", "9/6/10/7", "10/5/11/6"
-                            ].map((area, index) => (
-                                <div
-                                    key={index}
-                                    className="qr-cell bg-black"
-                                    style={{ gridArea: area }}
-                                ></div>
-                            ))}
-                        </div>
-                    </div>
+                    {PaymentQR()}
                 </div>
 
                 <p className="mt-3 text-xs text-gray-400 text-center">

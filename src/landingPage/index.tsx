@@ -7,7 +7,7 @@ import ModelSection from '../components/ModelSection';
 import AIShowcase from '../components/AIShowcase';
 import FAQ from '../components/FAQ';
 import Footer from '../components/Footer';
-import YoutubeDonationAboutSection from './Component/youtube';
+import YoutubeSection from './Component/youtube';
 const LandingPage: React.FC = () => {
   return (
     <div>
@@ -16,7 +16,7 @@ const LandingPage: React.FC = () => {
       <CTABanner />
       <AIShowcase />
       <ModelSection />
-      <YoutubeDonationAboutSection />
+      <YoutubeSection />
       <FAQ />
       <Footer />
     </div>
