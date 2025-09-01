@@ -615,8 +615,8 @@ const AI: React.FC = () => {
 
   const handleToggleModelActive = (modelId: string) => {
     setModels((prev) => {
-      const selectedCount = prev.filter(m => m.selected).length;
-      const expandedCount = prev.filter(m => m.isExpend).length;
+      const selectedCount = prev.filter(m => m.enabled && m.selected).length;
+      const expandedCount = prev.filter(m => m.enabled && m.isExpend).length;
 
       return prev.map((model) => {
         if (model.id === modelId) {
@@ -641,8 +641,8 @@ const AI: React.FC = () => {
 
   const handleToggleCollapse = (modelId: string, expand: boolean) => {
     setModels((prev) => {
-      const expandedCount = prev.filter(m => m.isExpend).length;
-      const selectedCount = prev.filter(m => m.selected).length;
+      const expandedCount = prev.filter(m => m.enabled && m.isExpend).length;
+      const selectedCount = prev.filter(m => m.enabled && m.selected).length;
 
       return prev.map((model) => {
         if (model.id === modelId) {
@@ -948,7 +948,7 @@ const AI: React.FC = () => {
               onMessageChange={setMessage}
               onSendMessage={handleSendMessage}
               isLoading={isLoading}
-              selectedModels={selectedModels}
+              selectedModels={selectedModels.filter((model) => model.enabled && model.selected)}
               onUseExample={handleUseExample}
               suggestedQuestions={exampleQuestions}
             /></>}
