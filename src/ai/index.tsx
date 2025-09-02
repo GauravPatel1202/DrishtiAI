@@ -96,7 +96,6 @@ const MessageBubble: React.FC<{
   onCopy?: (content: string) => void,
   onRate?: (rating: boolean) => void
 }> = ({ message, model, onRegenerate, onCopy }) => {
-  const [showActions, setShowActions] = useState(false);
   if (message.isMultiResponse && message.responses) {
     return (
       <div className="mb-6 group relative">
@@ -109,7 +108,7 @@ const MessageBubble: React.FC<{
 
         <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
           {message.responses.map((response, index) => (
-            <div key={index} className="bg-gray-700 rounded-lg p-4 border-l-4 border-gray-600 hover:border-blue-500 transition-colors relative">
+            <div key={index} className="bg-gray-700 rounded-lg p-4 border-1 border-gray-600 hover:border-blue-600 transition-colors relative">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 rounded-full bg-orange-400"></div>
@@ -118,10 +117,10 @@ const MessageBubble: React.FC<{
                 </div>
 
                 {!response.loading && !response.error && (
-                  <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute -bottom-5 right-0 bg-gray-800 rounded-lg p-1 shadow-lg flex space-x-1">
                     <button
                       onClick={() => onCopy?.(response.content)}
-                      className="p-1text-white rounded"
+                      className="-1 text-gray-400 hover:text-white rounded cursor-pointer"
                       title="Copy"
                     >
                       <Copy className="w-3 h-3" />
@@ -158,8 +157,7 @@ const MessageBubble: React.FC<{
 
   if (message.model === model) {
     return (
-      <div className={`flex items-start space-x-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4 group`} onMouseEnter={() => setShowActions(true)}
-        onMouseLeave={() => setShowActions(false)}>
+      <div className={`flex items-start space-x-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4 group`}>
         {message.role === 'assistant' && (
           <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
             <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
@@ -171,24 +169,16 @@ const MessageBubble: React.FC<{
             ? 'bg-blue-600 text-white ml-8 sm:ml-12'
             : 'bg-gray-700 text-gray-100 mr-8 sm:mr-12'
             } group-hover:bg-opacity-95 transition-all`}
-
         >
-
           <p className="whitespace-pre-wrap text-sm sm:text-base break-all">{message.content}</p>
           <div className="text-xs opacity-70 mt-2 flex items-center space-x-2">
             <span>{message.timestamp.toLocaleTimeString()}</span>
-            {message.model && (
-              <>
-                <span>•</span>
-                <span className="font-medium">{message.model}</span>
-              </>
-            )}
           </div>
-          {showActions && message.role === 'user' && (
-            <div className="absolute  right-0 bg-gray-800 rounded-lg p-1 shadow-lg flex space-x-1">
+          {message.role === 'user' && (
+            <div className="absolute -bottom-5 right-0 bg-gray-800 rounded-lg p-1 shadow-lg flex space-x-1">
               <button
                 onClick={() => onCopy?.(message.content)}
-                className="p-1 text-gray-400 hover:text-white rounded"
+                className="p-1 text-gray-400 hover:text-white rounded cursor-pointer"
                 title="Copy"
               >
                 <Copy className="w-3 h-3" />
