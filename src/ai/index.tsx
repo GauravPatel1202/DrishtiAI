@@ -546,16 +546,16 @@ const modelsComponent = [
     name: 'Gemini 1.5 Flash',
     color: 'bg-blue-500',
     enabled: true,
-    selected: true,
-    isExpend: true
+    selected: false,
+    isExpend: false
   },
   {
     id: 'deepseek',
     name: 'DeepSeek Chat',
     color: 'bg-purple-500',
     enabled: true,
-    selected: true,
-    isExpend: true
+    selected: false,
+    isExpend: false
   },
   {
     id: 'perplexity',
@@ -568,24 +568,6 @@ const modelsComponent = [
   {
     id: 'test',
     name: 'test',
-    color: 'bg-orange-500',
-    enabled: false,
-    selected: true,
-    isExpend: true
-  }
-  ,
-  {
-    id: 'test1',
-    name: 'test1',
-    color: 'bg-orange-500',
-    enabled: false,
-    selected: true,
-    isExpend: true
-  }
-  ,
-  {
-    id: 'test2',
-    name: 'test2',
     color: 'bg-orange-500',
     enabled: false,
     selected: true,
