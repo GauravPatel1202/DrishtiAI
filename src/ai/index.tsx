@@ -16,6 +16,8 @@ import {
   Mic,
   Copy,
   Zap,
+  VolumeX,
+  Volume2,
 } from 'lucide-react';
 
 import type { AIModel, Message } from '../lib/type';
@@ -44,6 +46,9 @@ interface ChatAreaProps {
   onRegenerateResponse: (messageId: string) => void;
   onCopyMessage: (content: string) => void;
   onRateResponse: (messageId: string, modelId: string, rating: boolean) => void;
+  readingMessageId?: string; // Add this
+  onReadAloud: (messageId: string, content: string) => void; // Add this
+  onStopReading: () => void; // Add this
 }
 interface InputAreaProps {
   message: string;
@@ -53,6 +58,18 @@ interface InputAreaProps {
   isLoading: boolean;
   selectedModels: AIModel[];
   suggestedQuestions: string[];
+}
+
+interface MessageBubbleProps {
+  message: Message;
+  model: string;
+  onEdit?: (newContent: string) => void;
+  onRegenerate?: () => void;
+  onCopy?: (content: string) => void;
+  onRate?: (rating: boolean) => void;
+  isReading?: boolean;
+  onReadAloud?: (content: string) => void;
+  onStopReading?: () => void;
 }
 
 const providerMapping: { [key: string]: string } = {
@@ -88,14 +105,9 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   );
 };
 
-const MessageBubble: React.FC<{
-  message: Message,
-  model: string,
-  onEdit?: (newContent: string) => void,
-  onRegenerate?: () => void,
-  onCopy?: (content: string) => void,
-  onRate?: (rating: boolean) => void
-}> = ({ message, model, onRegenerate, onCopy }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message, model, onRegenerate, onCopy, isReading = false,
+  onReadAloud,
+  onStopReading }) => {
   if (message.isMultiResponse && message.responses) {
     return (
       <div className="mb-6 group relative">
@@ -117,14 +129,26 @@ const MessageBubble: React.FC<{
                 </div>
 
                 {!response.loading && !response.error && (
-                  <div className="absolute -bottom-5 right-0 bg-gray-800 rounded-lg p-1 shadow-lg flex space-x-1">
+                  <div className="absolute -bottom-5 right-0 bg-gray-800 rounded-lg py-1 px-2 shadow-lg flex space-x-1">
+                    <div className='flex flex-row gap-2'>
                     <button
                       onClick={() => onCopy?.(response.content)}
                       className="-1 text-gray-400 hover:text-white rounded cursor-pointer"
                       title="Copy"
                     >
                       <Copy className="w-3 h-3" />
-                    </button>
+
+                      </button>
+                      {onReadAloud && (
+                        <button
+                          onClick={() => isReading ? onStopReading?.() : onReadAloud(response.content)}
+                          className="p-1 text-gray-400 hover:text-white rounded cursor-pointer"
+                          title={isReading ? "Stop reading" : "Read aloud"}
+                        >
+                          {isReading ? <VolumeX className="w-3 h-3 text-blue-600" /> : <Volume2 className="w-3 h-3" />}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -207,7 +231,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   onEditMessage,
   onRegenerateResponse,
   onCopyMessage,
-  onRateResponse
+  onRateResponse,
+  readingMessageId, // Add this
+  onReadAloud, // Add this
+  onStopReading, // Add this
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -273,6 +300,9 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                       onRegenerate={() => onRegenerateResponse(message.id)}
                       onCopy={onCopyMessage}
                       onRate={(rating) => onRateResponse(message.id, model.id, rating)}
+                      isReading={message.id === readingMessageId}
+                      onReadAloud={(content) => onReadAloud(message.id, content)}
+                      onStopReading={onStopReading}
                     />
                   ))}
                   <div ref={messagesEndRef} />
@@ -814,9 +844,41 @@ const AI: React.FC = () => {
     setIsLoading(false);
   };
   const [showDonation, setShowDonation] = useState(false);
+  const [readingMessageId, setReadingMessageId] = useState<string | null>(null);
+  const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
 
+  const handleReadAloud = (messageId: string, content: string) => {
+    // Stop any ongoing speech
+    handleStopReading();
 
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(content);
+      speechSynthesisRef.current = utterance;
 
+      utterance.onend = () => {
+        setReadingMessageId(null);
+        speechSynthesisRef.current = null;
+      };
+
+      utterance.onerror = () => {
+        setReadingMessageId(null);
+        speechSynthesisRef.current = null;
+      };
+
+      window.speechSynthesis.speak(utterance);
+      setReadingMessageId(messageId);
+    } else {
+      alert("Text-to-speech is not supported in your browser");
+    }
+  };
+
+  const handleStopReading = () => {
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      setReadingMessageId(null);
+      speechSynthesisRef.current = null;
+    }
+  };
   useEffect(() => {
     const lastClosed = localStorage.getItem('lastDonationClosed');
     const now = Date.now();
@@ -834,7 +896,12 @@ const AI: React.FC = () => {
       }
     }, ONE_HOUR);
 
-    return () => clearInterval(timer);
+    return () => {
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+      }
+      clearInterval(timer)
+    };
   }, []);
   const handleClose = () => {
     setShowDonation(false);
@@ -912,6 +979,9 @@ const AI: React.FC = () => {
               onRegenerateResponse={handleRegenerateResponse}
               onCopyMessage={handleCopyMessage}
               onRateResponse={handleRateResponse}
+              readingMessageId={readingMessageId || undefined}
+              onReadAloud={handleReadAloud}
+              onStopReading={handleStopReading}
 
             />
             <InputArea
