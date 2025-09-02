@@ -146,7 +146,7 @@ const MessageBubble: React.FC<{
                     <span className="text-sm">Thinking...</span>
                   </div>
                 ) : (
-                <p className="text-gray-100 text-sm whitespace-pre-wrap break-words">{response.content}</p>
+                    <p className="text-gray-100 text-sm whitespace-pre-wrap break-all">{response.content}</p>
               )}
             </div>
           ))}
