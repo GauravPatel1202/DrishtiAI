@@ -444,11 +444,8 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
   const getPlaceholder = () => {
     if (selectedModels.length === 0) {
       return "Select models to get started...";
-    } else if (selectedModels.length === 1) {
-      return `Ask ${selectedModels[0]} anything...`;
-    } else {
-      return `Ask ${selectedModels.length} models anything...`;
     }
+    return `Ask ${selectedModels.length} models anything...`;
   };
 
   return (
