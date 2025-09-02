@@ -21,9 +21,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const token = localStorage.getItem('token') ?? "";
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const apiClient = createApiClient()
+  const apiClient = createApiClient(token)
 
 
   useEffect(() => {
@@ -74,7 +75,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = async () => {
-    const token = localStorage.getItem('token') ?? "";
+
     await apiClient.logout(token).then(() => {
       setUser(null);
       localStorage.removeItem('user');

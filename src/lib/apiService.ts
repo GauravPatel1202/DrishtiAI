@@ -21,7 +21,7 @@ export const PATHS = Object.freeze({
   LOGOUT: () => `/api/auth/logout`,
 });
 
-export const createApiClient = (): WACApiClient => {
+export const createApiClient = (token: any): WACApiClient => {
   const sendQuery = async (
     query: string,
     model: string[]
@@ -38,6 +38,7 @@ export const createApiClient = (): WACApiClient => {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
 
       body: JSON.stringify(requestPayload),

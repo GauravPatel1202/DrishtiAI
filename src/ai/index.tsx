@@ -572,13 +572,15 @@ const exampleQuestions = [
 const ONE_HOUR = 60 * 60 * 1000;
 const AI: React.FC = () => {
   const navigate = useNavigate();
+  const token = localStorage.getItem('token') ?? "";
   const { user, logout } = useAuth();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [models, setModels] = useState<AIModel[]>(modelsComponent);
   const [collapsedModels, setCollapsedModels] = useState<string[]>([]);
-  const apiService = createApiClient();
+
+  const apiService = createApiClient(token);
   const selectedModels = models;
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
