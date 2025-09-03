@@ -83,7 +83,7 @@ import {
 
 } from 'lucide-react';
 
-import type { AIModel, Message } from '../lib/type';
+import { exampleQuestions, modelsComponent, type AIModel, type Message } from '../lib/type';
 import { Logo } from '../components/logo';
 import { NewChatButton, ProjectsSection } from './Component/sidebar';
 import { Route, Routes, useNavigate } from 'react-router-dom';
@@ -1520,49 +1520,6 @@ const InputArea: React.FC<InputAreaProps> = ({
   );
 };
 
-const modelsComponent = [
-  {
-    id: 'gemini',
-    name: 'Gemini 1.5 Flash',
-    color: 'bg-blue-500',
-    enabled: true,
-    selected: true,
-    isExpend: true
-  },
-  {
-    id: 'chatgpt',
-    name: 'OpenAI GPT-3.5',
-    color: 'bg-emerald-500',
-    enabled: true,
-    selected: false,
-    isExpend: false
-  },
-  {
-    id: 'deepseek',
-    name: 'DeepSeek Chat',
-    color: 'bg-purple-500',
-    enabled: true,
-    selected: false,
-    isExpend: false
-  },
-  {
-    id: 'perplexity',
-    name: 'Mistral Large',
-    color: 'bg-orange-500',
-    enabled: true,
-    selected: false,
-    isExpend: false
-  }
-];
-
-const exampleQuestions = [
-  "Daily Life Tools",
-  "Explain quantum computing in simple terms",
-  "How to learn React quickly?",
-  "What are the best practices for API design?",
-  "Write a poem about artificial intelligence",
-  "Compare Next.js and Remix frameworks"
-];
 
 const ONE_HOUR = 60 * 60 * 1000;
 
