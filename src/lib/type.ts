@@ -34,3 +34,47 @@ export interface ApiResponse {
 export interface SidebarProps {
   models: AIModel[];
 }
+
+export const modelsComponent = [
+  {
+    id: "gemini",
+    name: "Gemini",
+    color: "bg-blue-500",
+    enabled: true,
+    selected: true,
+    isExpend: true,
+  },
+  {
+    id: "chatgpt",
+    name: "OpenAI",
+    color: "bg-emerald-500",
+    enabled: true,
+    selected: false,
+    isExpend: false,
+  },
+  {
+    id: "deepseek",
+    name: "DeepSeek",
+    color: "bg-purple-500",
+    enabled: true,
+    selected: false,
+    isExpend: false,
+  },
+  {
+    id: "perplexity",
+    name: "Mistral",
+    color: "bg-orange-500",
+    enabled: true,
+    selected: false,
+    isExpend: false,
+  },
+];
+
+export const exampleQuestions = [
+  "Daily Life Tools",
+  "Explain quantum computing in simple terms",
+  "How to learn React quickly?",
+  "What are the best practices for API design?",
+  "Write a poem about artificial intelligence",
+  "Compare Next.js and Remix frameworks",
+];

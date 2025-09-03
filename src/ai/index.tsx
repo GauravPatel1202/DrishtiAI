@@ -30,6 +30,57 @@ import {
   CloudRain,
   Sun,
   Moon,
+  Target,
+  Wallet,
+  PiggyBank,
+  Edit3,
+  Lightbulb,
+  Utensils,
+  Search,
+  History,
+  Star,
+
+  Calendar,
+
+  Home,
+  Gift,
+
+  BookOpen,
+  Globe,
+  MapPin,
+
+  Mail,
+
+  Palette,
+  Scissors,
+
+  Compass,
+  Watch,
+
+  Lock,
+
+  DollarSign,
+  CreditCard,
+  Receipt,
+  Package,
+
+
+
+
+
+  FileText,
+  Music,
+  Film,
+  Luggage,
+  Briefcase,
+  Languages,
+  GraduationCap,
+  Smartphone,
+  Code,
+  Cpu,
+
+
+
 } from 'lucide-react';
 
 import type { AIModel, Message } from '../lib/type';
@@ -103,6 +154,8 @@ interface DailyTool {
   icon: React.ReactNode;
   description: string;
   prompt: string;
+  category: string;
+  favorite?: boolean;
 }
 
 interface QuickAction {
@@ -113,6 +166,20 @@ interface QuickAction {
   category: string;
 }
 
+interface ToolCategory {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  color: string;
+}
+
+interface RecentTool {
+  id: string;
+  name: string;
+  timestamp: Date;
+  prompt: string;
+}
+
 const providerMapping: { [key: string]: string } = {
   'chatgpt': 'openai',
   'gemini': 'gemini',
@@ -120,49 +187,448 @@ const providerMapping: { [key: string]: string } = {
   'perplexity': 'mistral',
 };
 
-// Daily life tools
+// Tool categories
+const toolCategories: ToolCategory[] = [
+  {
+    id: 'all',
+    name: 'All Tools',
+    icon: <Sparkles className="w-4 h-4" />,
+    color: 'bg-purple-500'
+  },
+  {
+    id: 'productivity',
+    name: 'Productivity',
+    icon: <TrendingUp className="w-4 h-4" />,
+    color: 'bg-blue-500'
+  },
+  {
+    id: 'health',
+    name: 'Health & Wellness',
+    icon: <Heart className="w-4 h-4" />,
+    color: 'bg-green-500'
+  },
+  {
+    id: 'home',
+    name: 'Home & Life',
+    icon: <Home className="w-4 h-4" />,
+    color: 'bg-orange-500'
+  },
+  {
+    id: 'finance',
+    name: 'Finance',
+    icon: <DollarSign className="w-4 h-4" />,
+    color: 'bg-emerald-500'
+  },
+  {
+    id: 'creativity',
+    name: 'Creativity',
+    icon: <Palette className="w-4 h-4" />,
+    color: 'bg-pink-500'
+  },
+  {
+    id: 'technology',
+    name: 'Technology',
+    icon: <Cpu className="w-4 h-4" />,
+    color: 'bg-indigo-500'
+  },
+  {
+    id: 'education',
+    name: 'Education',
+    icon: <BookOpen className="w-4 h-4" />,
+    color: 'bg-yellow-500'
+  },
+  {
+    id: 'travel',
+    name: 'Travel',
+    icon: <Globe className="w-4 h-4" />,
+    color: 'bg-cyan-500'
+  },
+  {
+    id: 'entertainment',
+    name: 'Entertainment',
+    icon: <Film className="w-4 h-4" />,
+    color: 'bg-red-500'
+  }
+];
+
+// Enhanced daily tools with categories
 const dailyTools: DailyTool[] = [
+  // Productivity
+  {
+    id: 'daily-planner',
+    name: 'Daily Planner',
+    icon: <Calendar className="w-5 h-5" />,
+    description: 'Plan your perfect day',
+    prompt: 'Create a detailed daily schedule for optimal productivity including work blocks, breaks, and self-care',
+    category: 'productivity'
+  },
+  {
+    id: 'goal-setter',
+    name: 'Goal Setter',
+    icon: <Target className="w-5 h-5" />,
+    description: 'Set and track goals',
+    prompt: 'Help me create SMART goals for the next quarter with actionable steps',
+    category: 'productivity'
+  },
+  {
+    id: 'meeting-helper',
+    name: 'Meeting Helper',
+    icon: <Users className="w-5 h-5" />,
+    description: 'Prepare for meetings',
+    prompt: 'Create an agenda and talking points for a team meeting about project updates',
+    category: 'productivity'
+  },
+  {
+    id: 'time-blocker',
+    name: 'Time Blocker',
+    icon: <Clock className="w-5 h-5" />,
+    description: 'Time management system',
+    prompt: 'Help me create a time blocking schedule for a productive work week',
+    category: 'productivity'
+  },
+  {
+    id: 'email-responder',
+    name: 'Email Responder',
+    icon: <Mail className="w-5 h-5" />,
+    description: 'Craft professional emails',
+    prompt: 'Help me write a professional email to my manager about requesting time off',
+    category: 'productivity'
+  },
+
+  // Health & Wellness
   {
     id: 'meal-planner',
     name: 'Meal Planner',
     icon: <ChefHat className="w-5 h-5" />,
-    description: 'Plan your weekly meals',
-    prompt: 'Create a healthy meal plan for the week with grocery list for a family of 4'
+    description: 'Weekly meal plans',
+    prompt: 'Create a healthy meal plan for the week with grocery list for a family of 4',
+    category: 'health'
   },
   {
-    id: 'fitness-tracker',
-    name: 'Fitness Plan',
+    id: 'workout-builder',
+    name: 'Workout Builder',
     icon: <Heart className="w-5 h-5" />,
-    description: 'Get workout recommendations',
-    prompt: 'Create a 30-day fitness plan for beginners focusing on strength and cardio'
+    description: 'Custom workouts',
+    prompt: 'Design a 30-minute home workout focusing on strength and cardio',
+    category: 'health'
   },
   {
-    id: 'finance-helper',
-    name: 'Finance Helper',
-    icon: <TrendingUp className="w-5 h-5" />,
-    description: 'Budget and financial advice',
-    prompt: 'Help me create a monthly budget for a $5000 income with expenses breakdown'
+    id: 'meditation-guide',
+    name: 'Meditation Guide',
+    icon: <Zap className="w-5 h-5" />,
+    description: 'Mindfulness exercises',
+    prompt: 'Guide me through a 10-minute mindfulness meditation session',
+    category: 'health'
   },
   {
-    id: 'weather-forecast',
-    name: 'Weather',
+    id: 'sleep-optimizer',
+    name: 'Sleep Optimizer',
+    icon: <Moon className="w-5 h-5" />,
+    description: 'Improve sleep quality',
+    prompt: 'Suggest a bedtime routine and environment adjustments to improve sleep quality',
+    category: 'health'
+  },
+  {
+    id: 'stress-manager',
+    name: 'Stress Manager',
     icon: <CloudRain className="w-5 h-5" />,
-    description: 'Weather information and tips',
-    prompt: 'What should I wear for a day with 75°F and 60% chance of rain?'
+    description: 'Stress reduction techniques',
+    prompt: 'Provide 5 effective techniques to manage stress during busy work periods',
+    category: 'health'
+  },
+
+  // Home & Life
+  {
+    id: 'cleaning-schedule',
+    name: 'Cleaning Schedule',
+    icon: <Sparkles className="w-5 h-5" />,
+    description: 'Home maintenance',
+    prompt: 'Create a weekly cleaning schedule for a 3-bedroom house',
+    category: 'home'
   },
   {
-    id: 'shopping-list',
-    name: 'Shopping List',
+    id: 'grocery-optimizer',
+    name: 'Grocery Optimizer',
     icon: <ShoppingCart className="w-5 h-5" />,
-    description: 'Create smart shopping lists',
-    prompt: 'Generate a shopping list for healthy breakfast options for the week'
+    description: 'Smart shopping lists',
+    prompt: 'Generate a cost-effective grocery list for healthy meals for the week',
+    category: 'home'
   },
   {
-    id: 'time-converter',
-    name: 'Time Converter',
-    icon: <Clock className="w-5 h-5" />,
-    description: 'Time zone conversions',
-    prompt: 'What time is it in Tokyo when it\'s 9 AM in New York?'
+    id: 'recipe-finder',
+    name: 'Recipe Finder',
+    icon: <Utensils className="w-5 h-5" />,
+    description: 'Find recipes',
+    prompt: 'Suggest 3 easy dinner recipes using chicken, rice, and vegetables',
+    category: 'home'
+  },
+  {
+    id: 'home-organizer',
+    name: 'Home Organizer',
+    icon: <Package className="w-5 h-5" />,
+    description: 'Decluttering strategies',
+    prompt: 'Provide a room-by-room guide to declutter and organize my home',
+    category: 'home'
+  },
+  {
+    id: 'diy-helper',
+    name: 'DIY Helper',
+    icon: <Scissors className="w-5 h-5" />,
+    description: 'Home improvement projects',
+    prompt: 'Guide me through painting a room with professional techniques',
+    category: 'home'
+  },
+
+  // Finance
+  {
+    id: 'budget-planner',
+    name: 'Budget Planner',
+    icon: <Wallet className="w-5 h-5" />,
+    description: 'Financial planning',
+    prompt: 'Help me create a monthly budget for a $5000 income with expenses breakdown',
+    category: 'finance'
+  },
+  {
+    id: 'savings-tracker',
+    name: 'Savings Tracker',
+    icon: <PiggyBank className="w-5 h-5" />,
+    description: 'Track savings goals',
+    prompt: 'Create a savings plan to save $10,000 in 12 months',
+    category: 'finance'
+  },
+  {
+    id: 'investment-analyzer',
+    name: 'Investment Analyzer',
+    icon: <TrendingUp className="w-5 h-5" />,
+    description: 'Investment guidance',
+    prompt: 'Explain different investment options for a beginner with $5,000 to invest',
+    category: 'finance'
+  },
+  {
+    id: 'debt-payoff',
+    name: 'Debt Payoff Planner',
+    icon: <CreditCard className="w-5 h-5" />,
+    description: 'Debt reduction strategies',
+    prompt: 'Create a debt snowball plan for paying off $15,000 in credit card debt',
+    category: 'finance'
+  },
+  {
+    id: 'tax-helper',
+    name: 'Tax Helper',
+    icon: <Receipt className="w-5 h-5" />,
+    description: 'Tax preparation guide',
+    prompt: 'What deductions can I claim as a freelance graphic designer?',
+    category: 'finance'
+  },
+
+  // Creativity
+  {
+    id: 'writing-helper',
+    name: 'Writing Helper',
+    icon: <Edit3 className="w-5 h-5" />,
+    description: 'Writing assistance',
+    prompt: 'Help me write a compelling email to my team about the new project',
+    category: 'creativity'
+  },
+  {
+    id: 'idea-generator',
+    name: 'Idea Generator',
+    icon: <Lightbulb className="w-5 h-5" />,
+    description: 'Creative ideas',
+    prompt: 'Generate 10 creative ideas for a weekend project',
+    category: 'creativity'
+  },
+  {
+    id: 'content-creator',
+    name: 'Content Creator',
+    icon: <FileText className="w-5 h-5" />,
+    description: 'Content ideas',
+    prompt: 'Suggest 5 engaging topics for a technology blog',
+    category: 'creativity'
+  },
+  {
+    id: 'design-helper',
+    name: 'Design Helper',
+    icon: <Palette className="w-5 h-5" />,
+    description: 'Design inspiration',
+    prompt: 'Provide color palette suggestions for a modern website design',
+    category: 'creativity'
+  },
+  {
+    id: 'storyteller',
+    name: 'Storyteller',
+    icon: <BookOpen className="w-5 h-5" />,
+    description: 'Story ideas',
+    prompt: 'Help me develop a plot for a short science fiction story',
+    category: 'creativity'
+  },
+
+  // Technology
+  {
+    id: 'tech-helper',
+    name: 'Tech Helper',
+    icon: <Cpu className="w-5 h-5" />,
+    description: 'Tech support',
+    prompt: 'Troubleshoot why my computer is running slowly and suggest fixes',
+    category: 'technology'
+  },
+  {
+    id: 'code-assistant',
+    name: 'Code Assistant',
+    icon: <Code className="w-5 h-5" />,
+    description: 'Programming help',
+    prompt: 'Help me debug this JavaScript function that is not working correctly',
+    category: 'technology'
+  },
+  {
+    id: 'app-ideas',
+    name: 'App Ideas',
+    icon: <Smartphone className="w-5 h-5" />,
+    description: 'App concepts',
+    prompt: 'Suggest 5 innovative mobile app ideas that solve everyday problems',
+    category: 'technology'
+  },
+  {
+    id: 'gadget-guide',
+    name: 'Gadget Guide',
+    icon: <Watch className="w-5 h-5" />,
+    description: 'Tech recommendations',
+    prompt: 'What are the best laptops for graphic design under $1500?',
+    category: 'technology'
+  },
+  {
+    id: 'privacy-checker',
+    name: 'Privacy Checker',
+    icon: <Lock className="w-5 h-5" />,
+    description: 'Online security',
+    prompt: 'What are the essential privacy settings I should enable on my smartphone?',
+    category: 'technology'
+  },
+
+  // Education
+  {
+    id: 'study-planner',
+    name: 'Study Planner',
+    icon: <BookOpen className="w-5 h-5" />,
+    description: 'Study schedules',
+    prompt: 'Create a study plan for preparing for a biology exam in 3 weeks',
+    category: 'education'
+  },
+  {
+    id: 'learning-path',
+    name: 'Learning Path',
+    icon: <GraduationCap className="w-5 h-5" />,
+    description: 'Skill development',
+    prompt: 'Design a 6-month learning path to become proficient in web development',
+    category: 'education'
+  },
+  {
+    id: 'research-helper',
+    name: 'Research Helper',
+    icon: <Search className="w-5 h-5" />,
+    description: 'Research assistance',
+    prompt: 'Help me outline the key points for a research paper on climate change',
+    category: 'education'
+  },
+  {
+    id: 'language-tutor',
+    name: 'Language Tutor',
+    icon: <Languages className="w-5 h-5" />,
+    description: 'Language learning',
+    prompt: 'Create a daily 15-minute Spanish practice routine for beginners',
+    category: 'education'
+  },
+  {
+    id: 'career-advisor',
+    name: 'Career Advisor',
+    icon: <Briefcase className="w-5 h-5" />,
+    description: 'Career guidance',
+    prompt: 'What skills should I develop to transition into a data science career?',
+    category: 'education'
+  },
+
+  // Travel
+  {
+    id: 'trip-planner',
+    name: 'Trip Planner',
+    icon: <MapPin className="w-5 h-5" />,
+    description: 'Travel itineraries',
+    prompt: 'Create a 5-day itinerary for a trip to Paris including major attractions',
+    category: 'travel'
+  },
+  {
+    id: 'packing-helper',
+    name: 'Packing Helper',
+    icon: <Luggage className="w-5 h-5" />,
+    description: 'Packing lists',
+    prompt: 'What should I pack for a week-long beach vacation in Hawaii?',
+    category: 'travel'
+  },
+  {
+    id: 'culture-guide',
+    name: 'Culture Guide',
+    icon: <Globe className="w-5 h-5" />,
+    description: 'Cultural information',
+    prompt: 'What are the cultural customs I should know before visiting Japan?',
+    category: 'travel'
+  },
+  {
+    id: 'budget-travel',
+    name: 'Budget Travel',
+    icon: <Wallet className="w-5 h-5" />,
+    description: 'Cost-saving tips',
+    prompt: 'How can I travel to Europe for two weeks on a $2000 budget?',
+    category: 'travel'
+  },
+  {
+    id: 'local-experiences',
+    name: 'Local Experiences',
+    icon: <Compass className="w-5 h-5" />,
+    description: 'Authentic experiences',
+    prompt: 'Suggest unique local experiences in Barcelona that tourists often miss',
+    category: 'travel'
+  },
+
+  // Entertainment
+  {
+    id: 'movie-recommender',
+    name: 'Movie Recommender',
+    icon: <Film className="w-5 h-5" />,
+    description: 'Film suggestions',
+    prompt: 'Recommend 5 critically acclaimed movies from the past year that I might enjoy',
+    category: 'entertainment'
+  },
+  {
+    id: 'book-suggester',
+    name: 'Book Suggester',
+    icon: <BookOpen className="w-5 h-5" />,
+    description: 'Reading recommendations',
+    prompt: 'Suggest 3 novels similar to "The Alchemist" by Paulo Coelho',
+    category: 'entertainment'
+  },
+  {
+    id: 'game-finder',
+    name: 'Game Finder',
+    icon: <Music className="w-5 h-5" />,
+    description: 'Game recommendations',
+    prompt: 'What are the best cooperative video games to play with friends online?',
+    category: 'entertainment'
+  },
+  {
+    id: 'music-discovery',
+    name: 'Music Discovery',
+    icon: <Music className="w-5 h-5" />,
+    description: 'Music suggestions',
+    prompt: 'Recommend artists similar to Tame Impala for someone who enjoys psychedelic rock',
+    category: 'entertainment'
+  },
+  {
+    id: 'party-planner',
+    name: 'Party Planner',
+    icon: <Gift className="w-5 h-5" />,
+    description: 'Event planning',
+    prompt: 'Help me plan a memorable birthday party for a 10-year-old with a science theme',
+    category: 'entertainment'
   }
 ];
 
@@ -642,7 +1108,45 @@ const InputArea: React.FC<InputAreaProps> = ({
 }) => {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [recentTools, setRecentTools] = useState<RecentTool[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Load recent tools and favorites from localStorage
+  useEffect(() => {
+    const savedRecentTools = localStorage.getItem('recentTools');
+    if (savedRecentTools) {
+      try {
+        const parsed = JSON.parse(savedRecentTools);
+        setRecentTools(parsed.map((tool: any) => ({
+          ...tool,
+          timestamp: new Date(tool.timestamp)
+        })));
+      } catch (e) {
+        console.error('Error loading recent tools:', e);
+      }
+    }
+
+    const savedFavorites = localStorage.getItem('favoriteTools');
+    if (savedFavorites) {
+      try {
+        setFavorites(new Set(JSON.parse(savedFavorites)));
+      } catch (e) {
+        console.error('Error loading favorites:', e);
+      }
+    }
+  }, []);
+
+  // Save recent tools and favorites to localStorage
+  useEffect(() => {
+    localStorage.setItem('recentTools', JSON.stringify(recentTools));
+  }, [recentTools]);
+
+  useEffect(() => {
+    localStorage.setItem('favoriteTools', JSON.stringify(Array.from(favorites)));
+  }, [favorites]);
 
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
@@ -709,6 +1213,42 @@ const InputArea: React.FC<InputAreaProps> = ({
     return `Ask ${selectedModels.length} models anything...`;
   };
 
+  const handleToolClick = (tool: DailyTool) => {
+    onQuickAction(tool.prompt);
+
+    // Add to recent tools
+    const newRecentTool: RecentTool = {
+      id: tool.id,
+      name: tool.name,
+      timestamp: new Date(),
+      prompt: tool.prompt
+    };
+
+    setRecentTools(prev => {
+      const filtered = prev.filter(t => t.id !== tool.id);
+      return [newRecentTool, ...filtered].slice(0, 5); // Keep only 5 most recent
+    });
+  };
+
+  const toggleFavorite = (toolId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newFavorites = new Set(favorites);
+    if (newFavorites.has(toolId)) {
+      newFavorites.delete(toolId);
+    } else {
+      newFavorites.add(toolId);
+    }
+    setFavorites(newFavorites);
+  };
+
+  // Filter tools based on category and search
+  const filteredTools = dailyTools.filter(tool => {
+    const matchesCategory = activeCategory === 'all' || tool.category === activeCategory;
+    const matchesSearch = tool.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tool.description.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
   // Group quick actions by category
   const groupedQuickActions = quickActions.reduce((groups, action) => {
     if (!groups[action.category]) {
@@ -721,59 +1261,186 @@ const InputArea: React.FC<InputAreaProps> = ({
   return (
     <div className="border-t border-gray-700">
       {showTools && (
-        <div className="max-w-6xl mx-auto p-4 bg-gray-800">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white flex items-center">
-              <Sparkles className="w-5 h-5 mr-2" />
-              Daily Life Tools
-            </h3>
-            <button
-              onClick={onToggleTools}
-              className="text-gray-400 hover:text-white"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-            {dailyTools.map((tool) => (
+        <div className="fixed inset-0  bg-opacity-50 z-50 flex justify-center items-start pt-16">
+          <div className="bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] overflow-hidden flex flex-col border border-gray-700">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-800/80">
+              <h3 className="text-lg font-semibold text-white flex items-center">
+                <Sparkles className="w-5 h-5 mr-2" />
+                Daily Life Tools
+              </h3>
               <button
-                key={tool.id}
-                onClick={() => onQuickAction(tool.prompt)}
-                className="flex flex-col items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
-                title={tool.description}
+                onClick={onToggleTools}
+                className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-700/80 transition-colors"
               >
-                <div className="text-blue-400 mb-2">{tool.icon}</div>
-                <span className="text-xs text-white font-medium text-center">{tool.name}</span>
-                <span className="text-xs text-gray-400 mt-1 text-center">{tool.description}</span>
+                <X className="w-5 h-5" />
               </button>
-            ))}
-          </div>
+            </div>
 
-          <div className="mt-6">
-            <h4 className="text-sm font-semibold text-gray-300 mb-3">Quick Actions</h4>
+            <div className="flex-1 overflow-y-auto p-4 bg-transparent">
+              {/* Search and Categories */}
+              <div className="mb-6">
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Search tools..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-gray-700/70 text-white rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none backdrop-blur-sm"
+                  />
+                </div>
 
-            {Object.entries(groupedQuickActions).map(([category, actions]) => (
-              <div key={category} className="mb-4">
-                <h5 className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{category}</h5>
-                <div className="flex overflow-x-auto space-x-2 pb-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
-                  {actions.map((action) => (
+                <div className="flex overflow-x-auto space-x-2 pb-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                  {toolCategories.map((category) => (
                     <button
-                      key={action.id}
-                      onClick={() => onQuickAction(action.prompt)}
-                      className="flex items-center space-x-2 flex-shrink-0 bg-gray-700 hover:bg-gray-600 text-xs text-gray-200 px-3 py-2 rounded-lg transition-colors"
-                      title={action.prompt}
+                      key={category.id}
+                      onClick={() => setActiveCategory(category.id)}
+                      className={`flex items-center space-x-2 flex-shrink-0 px-3 py-2 rounded-lg transition-colors backdrop-blur-sm ${activeCategory === category.id
+                        ? `${category.color} text-white`
+                        : 'bg-gray-700/70 text-gray-300 hover:bg-gray-600/80'
+                        }`}
                     >
-                      <span className="text-blue-400">{action.icon}</span>
-                      <span>{action.title}</span>
+                      <span>{category.icon}</span>
+                      <span className="text-sm">{category.name}</span>
                     </button>
                   ))}
                 </div>
               </div>
-            ))}
+
+              {/* Recent Tools */}
+              {recentTools.length > 0 && activeCategory === 'all' && (
+                <div className="mb-6">
+                  <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center">
+                    <History className="w-4 h-4 mr-2" />
+                    Recently Used
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    {recentTools.map((tool) => {
+                      const toolData = dailyTools.find(t => t.id === tool.id);
+                      if (!toolData) return null;
+
+                      return (
+                        <button
+                          key={tool.id}
+                          onClick={() => handleToolClick(toolData)}
+                          className="flex flex-col items-center p-3 bg-gray-700/70 rounded-lg hover:bg-gray-600/80 transition-colors relative group backdrop-blur-sm"
+                          title={toolData.description}
+                        >
+                          <button
+                            onClick={(e) => toggleFavorite(tool.id, e)}
+                            className="absolute top-2 right-2 text-gray-400 hover:text-yellow-400 z-10 backdrop-blur-sm rounded"
+                          >
+                            <Star className={`w-4 h-4 ${favorites.has(tool.id) ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+                          </button>
+                          <div className="text-blue-400 mb-2">{toolData.icon}</div>
+                          <span className="text-xs text-white font-medium text-center">{toolData.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Favorite Tools */}
+              {favorites.size > 0 && activeCategory === 'all' && (
+                <div className="mb-6">
+                  <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center">
+                    <Star className="w-4 h-4 mr-2 fill-yellow-400 text-yellow-400" />
+                    Favorite Tools
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    {Array.from(favorites).map((toolId) => {
+                      const tool = dailyTools.find(t => t.id === toolId);
+                      if (!tool) return null;
+
+                      return (
+                        <button
+                          key={tool.id}
+                          onClick={() => handleToolClick(tool)}
+                          className="flex flex-col items-center p-3 bg-gray-700/70 rounded-lg hover:bg-gray-600/80 transition-colors relative group backdrop-blur-sm"
+                          title={tool.description}
+                        >
+                          <button
+                            onClick={(e) => toggleFavorite(tool.id, e)}
+                            className="absolute top-2 right-2 text-yellow-400 z-10 backdrop-blur-sm rounded"
+                          >
+                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          </button>
+                          <div className="text-blue-400 mb-2">{tool.icon}</div>
+                          <span className="text-xs text-white font-medium text-center">{tool.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+          </div>
+              )}
+
+              {/* Tools Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+                {filteredTools.map((tool) => (
+                  <button
+                    key={tool.id}
+                    onClick={() => handleToolClick(tool)}
+                    className="flex flex-col items-center p-3 bg-gray-700/70 rounded-lg hover:bg-gray-600/80 transition-colors relative group backdrop-blur-sm"
+                    title={tool.description}
+                  >
+                    <button
+                      onClick={(e) => toggleFavorite(tool.id, e)}
+                      className="absolute top-2 right-2 text-gray-400 hover:text-yellow-400 z-10 backdrop-blur-sm rounded"
+                    >
+                      <Star className={`w-4 h-4 ${favorites.has(tool.id) ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+                    </button>
+                    <div className="text-blue-400 mb-2">{tool.icon}</div>
+                    <span className="text-xs text-white font-medium text-center">{tool.name}</span>
+                    <span className="text-xs text-gray-300 mt-1 text-center">{tool.description}</span>
+                  </button>
+                ))}
+              </div>
+
+              {filteredTools.length === 0 && (
+                <div className="text-center py-8 text-gray-300">
+                  <Search className="w-12 h-12 mx-auto mb-4" />
+                  <p>No tools found matching your search.</p>
+                  <button
+                    onClick={() => {
+                      setSearchTerm('');
+                      setActiveCategory('all');
+                    }}
+                    className="text-blue-400 hover:text-blue-300 mt-2"
+                  >
+                    Clear search
+                  </button>
+                </div>
+              )}
+
+              {/* Quick Actions */}
+              <div className="mt-6">
+                <h4 className="text-sm font-semibold text-gray-300 mb-3">Quick Actions</h4>
+
+                {Object.entries(groupedQuickActions).map(([category, actions]) => (
+                  <div key={category} className="mb-4">
+                    <h5 className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{category}</h5>
+                    <div className="flex overflow-x-auto space-x-2 pb-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                      {actions.map((action) => (
+                        <button
+                          key={action.id}
+                          onClick={() => onQuickAction(action.prompt)}
+                          className="flex items-center space-x-2 flex-shrink-0 bg-gray-700/70 hover:bg-gray-600/80 text-xs text-gray-200 px-3 py-2 rounded-lg transition-colors backdrop-blur-sm"
+                          title={action.prompt}
+                        >
+                          <span className="text-blue-400">{action.icon}</span>
+                          <span>{action.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
+
       {suggestedQuestions.length > 0 && (
         <div className="max-w-6xl mx-auto px-4 py-2">
           <div className="flex items-center justify-between mb-2">
@@ -852,6 +1519,7 @@ const InputArea: React.FC<InputAreaProps> = ({
     </div>
   );
 };
+
 const modelsComponent = [
   {
     id: 'gemini',
@@ -931,7 +1599,7 @@ const AI: React.FC = () => {
               ? expandedCount < 3
                 ? true
                 : model.isExpend
-              : false, 
+              : false,
           };
         }
         return model;
