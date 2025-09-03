@@ -640,7 +640,7 @@ const InputArea: React.FC<InputAreaProps> = ({
   showTools,
   onToggleTools
 }) => {
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
