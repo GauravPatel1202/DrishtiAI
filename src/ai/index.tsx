@@ -18,6 +18,18 @@ import {
   Zap,
   VolumeX,
   Volume2,
+  Bookmark,
+  BookmarkCheck,
+  Share,
+  Download,
+  Clock,
+  ShoppingCart,
+  ChefHat,
+  Heart,
+  TrendingUp,
+  CloudRain,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 import type { AIModel, Message } from '../lib/type';
@@ -33,7 +45,10 @@ interface TopBarProps {
   onModelToggleSelect: (modelId: string) => void;
   onToggleModel: (modelId: string) => void;
   onMenuClick: () => void;
+  onToggleTools: () => void;
+  showTools: boolean;
 }
+
 interface ChatAreaProps {
   messages: Message[];
   isLoading: boolean;
@@ -46,10 +61,14 @@ interface ChatAreaProps {
   onRegenerateResponse: (messageId: string) => void;
   onCopyMessage: (content: string) => void;
   onRateResponse: (messageId: string, modelId: string, rating: boolean) => void;
-  readingMessageId?: string; // Add this
-  onReadAloud: (messageId: string, content: string) => void; // Add this
-  onStopReading: () => void; // Add this
+  readingMessageId?: string;
+  onReadAloud: (messageId: string, content: string) => void;
+  onStopReading: () => void;
+  onBookmarkMessage: (messageId: string) => void;
+  onShareMessage: (content: string) => void;
+  onExportMessage: (content: string, format: string) => void;
 }
+
 interface InputAreaProps {
   message: string;
   onMessageChange: (message: string) => void;
@@ -58,6 +77,9 @@ interface InputAreaProps {
   isLoading: boolean;
   selectedModels: AIModel[];
   suggestedQuestions: string[];
+  onQuickAction: (prompt: string) => void;
+  showTools: boolean;
+  onToggleTools: () => void;
 }
 
 interface MessageBubbleProps {
@@ -70,6 +92,25 @@ interface MessageBubbleProps {
   isReading?: boolean;
   onReadAloud?: (content: string) => void;
   onStopReading?: () => void;
+  onBookmark?: (messageId: string) => void;
+  onShare?: (content: string) => void;
+  onExport?: (content: string, format: string) => void;
+}
+
+interface DailyTool {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  description: string;
+  prompt: string;
+}
+
+interface QuickAction {
+  id: string;
+  title: string;
+  prompt: string;
+  icon: React.ReactNode;
+  category: string;
 }
 
 const providerMapping: { [key: string]: string } = {
@@ -79,13 +120,103 @@ const providerMapping: { [key: string]: string } = {
   'perplexity': 'mistral',
 };
 
-const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
-  const [showModels, setShowModels] = useState(false);
+// Daily life tools
+const dailyTools: DailyTool[] = [
+  {
+    id: 'meal-planner',
+    name: 'Meal Planner',
+    icon: <ChefHat className="w-5 h-5" />,
+    description: 'Plan your weekly meals',
+    prompt: 'Create a healthy meal plan for the week with grocery list for a family of 4'
+  },
+  {
+    id: 'fitness-tracker',
+    name: 'Fitness Plan',
+    icon: <Heart className="w-5 h-5" />,
+    description: 'Get workout recommendations',
+    prompt: 'Create a 30-day fitness plan for beginners focusing on strength and cardio'
+  },
+  {
+    id: 'finance-helper',
+    name: 'Finance Helper',
+    icon: <TrendingUp className="w-5 h-5" />,
+    description: 'Budget and financial advice',
+    prompt: 'Help me create a monthly budget for a $5000 income with expenses breakdown'
+  },
+  {
+    id: 'weather-forecast',
+    name: 'Weather',
+    icon: <CloudRain className="w-5 h-5" />,
+    description: 'Weather information and tips',
+    prompt: 'What should I wear for a day with 75°F and 60% chance of rain?'
+  },
+  {
+    id: 'shopping-list',
+    name: 'Shopping List',
+    icon: <ShoppingCart className="w-5 h-5" />,
+    description: 'Create smart shopping lists',
+    prompt: 'Generate a shopping list for healthy breakfast options for the week'
+  },
+  {
+    id: 'time-converter',
+    name: 'Time Converter',
+    icon: <Clock className="w-5 h-5" />,
+    description: 'Time zone conversions',
+    prompt: 'What time is it in Tokyo when it\'s 9 AM in New York?'
+  }
+];
+
+// Quick actions for daily life
+const quickActions: QuickAction[] = [
+  {
+    id: 'morning-routine',
+    title: 'Morning Routine',
+    prompt: 'Suggest an optimal morning routine for productivity and health',
+    icon: <Sun className="w-4 h-4" />,
+    category: 'Wellness'
+  },
+  {
+    id: 'evening-wind-down',
+    title: 'Evening Wind Down',
+    prompt: 'Recommend an evening routine for better sleep and relaxation',
+    icon: <Moon className="w-4 h-4" />,
+    category: 'Wellness'
+  },
+  {
+    id: 'quick-workout',
+    title: '15-min Workout',
+    prompt: 'Design a 15-minute full body workout I can do at home',
+    icon: <Heart className="w-4 h-4" />,
+    category: 'Fitness'
+  },
+  {
+    id: 'healthy-snacks',
+    title: 'Healthy Snacks',
+    prompt: 'Suggest 5 healthy snack ideas that are easy to prepare',
+    icon: <ChefHat className="w-4 h-4" />,
+    category: 'Nutrition'
+  },
+  {
+    id: 'budget-template',
+    title: 'Budget Template',
+    prompt: 'Create a simple monthly budget template for personal finance',
+    icon: <TrendingUp className="w-4 h-4" />,
+    category: 'Finance'
+  },
+  {
+    id: 'shopping-list',
+    title: 'Smart Shopping List',
+    prompt: 'Generate a categorized shopping list for healthy eating',
+    icon: <ShoppingCart className="w-4 h-4" />,
+    category: 'Shopping'
+  }
+];
+
+const TopBar: React.FC<TopBarProps> = ({ onMenuClick, onToggleTools, showTools }) => {
   return (
     <div className="border-b border-gray-700">
       <div className="max-w-6xl mx-auto">
-        {/* Mobile header */}
-        <div className="lg:hidden flex items-center justify-between mb-3">
+        <div className="lg:hidden flex items-center justify-between mb-3 p-4">
           <button
             onClick={onMenuClick}
             className="p-2 rounded-md text-gray-600 hover:text-white hover:bg-gray-700"
@@ -93,21 +224,37 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
             <Menu className="w-5 h-5" />
           </button>
           <Logo />
-          <button
-            onClick={() => setShowModels(!showModels)}
-            className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700"
-          >
-            <Users className="w-5 h-5" />
-          </button>
+          <div className="flex space-x-2">
+            <button
+              onClick={onToggleTools}
+              className={`p-2 rounded-md transition-colors ${showTools ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                }`}
+              title="Daily Tools"
+            >
+              <Sparkles className="w-5 h-5" />
+            </button>
+            <button className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700">
+              <Users className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message, model, onRegenerate, onCopy, isReading = false,
+const MessageBubble: React.FC<MessageBubbleProps> = ({
+  message,
+  model,
+  onRegenerate,
+  onCopy,
+  isReading = false,
   onReadAloud,
-  onStopReading }) => {
+  onStopReading,
+  onBookmark,
+  onShare,
+  onExport
+}) => {
   if (message.isMultiResponse && message.responses) {
     return (
       <div className="mb-6 group relative">
@@ -131,13 +278,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, model, onRegener
                 {!response.loading && !response.error && (
                   <div className="absolute -bottom-5 right-0 bg-gray-800 rounded-lg py-1 px-2 shadow-lg flex space-x-1">
                     <div className='flex flex-row gap-2'>
-                    <button
-                      onClick={() => onCopy?.(response.content)}
-                      className="-1 text-gray-400 hover:text-white rounded cursor-pointer"
-                      title="Copy"
-                    >
-                      <Copy className="w-3 h-3" />
-
+                      <button
+                        onClick={() => onCopy?.(response.content)}
+                        className="p-1 text-gray-400 hover:text-white rounded cursor-pointer"
+                        title="Copy"
+                      >
+                        <Copy className="w-3 h-3" />
                       </button>
                       {onReadAloud && (
                         <button
@@ -146,6 +292,24 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, model, onRegener
                           title={isReading ? "Stop reading" : "Read aloud"}
                         >
                           {isReading ? <VolumeX className="w-3 h-3 text-blue-600" /> : <Volume2 className="w-3 h-3" />}
+                        </button>
+                      )}
+                      {onBookmark && (
+                        <button
+                          onClick={() => onBookmark(message.id)}
+                          className="p-1 text-gray-400 hover:text-yellow-400 rounded cursor-pointer"
+                          title="Bookmark"
+                        >
+                          {message.bookmarked ? <BookmarkCheck className="w-3 h-3 text-yellow-400" /> : <Bookmark className="w-3 h-3" />}
+                        </button>
+                      )}
+                      {onShare && (
+                        <button
+                          onClick={() => onShare(response.content)}
+                          className="p-1 text-gray-400 hover:text-blue-400 rounded cursor-pointer"
+                          title="Share"
+                        >
+                          <Share className="w-3 h-3" />
                         </button>
                       )}
                     </div>
@@ -198,6 +362,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, model, onRegener
           <div className="text-xs opacity-70 mt-2 flex items-center space-x-2">
             <span>{message.timestamp.toLocaleTimeString()}</span>
           </div>
+
           {message.role === 'user' && (
             <div className="absolute -bottom-5 right-0 bg-gray-800 rounded-lg p-1 shadow-lg flex space-x-1">
               <button
@@ -207,6 +372,69 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, model, onRegener
               >
                 <Copy className="w-3 h-3" />
               </button>
+            </div>
+          )}
+
+          {message.role === 'assistant' && (
+            <div className="absolute -bottom-5 right-0 bg-gray-800 rounded-lg p-1 shadow-lg flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={() => onCopy?.(message.content)}
+                className="p-1 text-gray-400 hover:text-white rounded cursor-pointer"
+                title="Copy"
+              >
+                <Copy className="w-3 h-3" />
+              </button>
+              {onReadAloud && (
+                <button
+                  onClick={() => isReading ? onStopReading?.() : onReadAloud(message.content)}
+                  className="p-1 text-gray-400 hover:text-white rounded cursor-pointer"
+                  title={isReading ? "Stop reading" : "Read aloud"}
+                >
+                  {isReading ? <VolumeX className="w-3 h-3 text-blue-600" /> : <Volume2 className="w-3 h-3" />}
+                </button>
+              )}
+              {onBookmark && (
+                <button
+                  onClick={() => onBookmark(message.id)}
+                  className="p-1 text-gray-400 hover:text-yellow-400 rounded cursor-pointer"
+                  title="Bookmark"
+                >
+                  {message.bookmarked ? <BookmarkCheck className="w-3 h-3 text-yellow-400" /> : <Bookmark className="w-3 h-3" />}
+                </button>
+              )}
+              {onShare && (
+                <button
+                  onClick={() => onShare(message.content)}
+                  className="p-1 text-gray-400 hover:text-blue-400 rounded cursor-pointer"
+                  title="Share"
+                >
+                  <Share className="w-3 h-3" />
+                </button>
+              )}
+              {onExport && (
+                <div className="relative group">
+                  <button
+                    className="p-1 text-gray-400 hover:text-green-400 rounded cursor-pointer"
+                    title="Export"
+                  >
+                    <Download className="w-3 h-3" />
+                  </button>
+                  <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block bg-gray-800 rounded-lg p-2 shadow-lg z-10">
+                    <button
+                      onClick={() => onExport(message.content, 'text')}
+                      className="block w-full text-left px-3 py-1 text-sm text-gray-300 hover:bg-gray-700 rounded"
+                    >
+                      📝 Text
+                    </button>
+                    <button
+                      onClick={() => onExport(message.content, 'pdf')}
+                      className="block w-full text-left px-3 py-1 text-sm text-gray-300 hover:bg-gray-700 rounded"
+                    >
+                      📄 PDF
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -219,8 +447,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, model, onRegener
       </div>
     );
   }
-    return <></>;
-  };
+  return <></>;
+};
+
 const ChatArea: React.FC<ChatAreaProps> = ({
   messages,
   selectedModels,
@@ -232,9 +461,12 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   onRegenerateResponse,
   onCopyMessage,
   onRateResponse,
-  readingMessageId, // Add this
-  onReadAloud, // Add this
-  onStopReading, // Add this
+  readingMessageId,
+  onReadAloud,
+  onStopReading,
+  onBookmarkMessage,
+  onShareMessage,
+  onExportMessage,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -249,15 +481,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   return (
     <div className="flex flex-col h-screen w-full mx-auto bg-gray-900 text-gray-100 shadow-xl overflow-hidden">
       <div className="flex-1 flex overflow-x-auto w-full scroll-smooth bg-gray-850 scrollbar-hide">
-        {selectedModels.map((model, index) => {// Assuming all selected models are active
+        {selectedModels.map((model, index) => {
           if (model.enabled && model.isExpend && model.selected) {
             return (
               <div
                 key={model.id}
-                className={` flex flex-col flex-auto h-full transition-all duration-300 min-w-full sm:min-w-0 
-                    ${index < selectedModels.length - 1 ? "border-r border-gray-700" : ""}`
-                }
-
+                className={`flex flex-col flex-auto h-full transition-all duration-300 min-w-full sm:min-w-0 
+                    ${index < selectedModels.length - 1 ? "border-r border-gray-700" : ""}`}
                 style={{
                   width: `calc((100% - ${collapsedModels.length * 80}px) / ${selectedModels.length - collapsedModels.length})`,
                   flex: '1 1 auto'
@@ -303,6 +533,9 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                       isReading={message.id === readingMessageId}
                       onReadAloud={(content) => onReadAloud(message.id, content)}
                       onStopReading={onStopReading}
+                      onBookmark={onBookmarkMessage}
+                      onShare={onShareMessage}
+                      onExport={onExportMessage}
                     />
                   ))}
                   <div ref={messagesEndRef} />
@@ -313,13 +546,12 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             return <></>;
           }
         })}
-        {selectedModels.map((model) => {// Assuming all selected models are active
+        {selectedModels.map((model) => {
           if (model.enabled && !model.isExpend && !model.selected) {
             return (
-
               <div
                 key={model.id}
-                className="flex flex-col md:flex-col h-full min-w-0 border-r border-gray-700 last:border-r-0 w-12 md:w-20 flex-none "
+                className="flex flex-col md:flex-col h-full min-w-0 border-r border-gray-700 last:border-r-0 w-12 md:w-20 flex-none"
               >
                 <div className="sticky top-0 bg-gray-800 py-2 px-3 flex flex-col items-center justify-between h-full z-10">
                   <span className="font-medium text-xs text-center mb-2">{model.name}</span>
@@ -342,13 +574,12 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                   </div>
                 </div>
               </div>
-
             );
           } else {
-            return null
+            return null;
           }
         })}
-        {selectedModels.map((model) => {// Assuming all selected models are active
+        {selectedModels.map((model) => {
           if (!model.enabled) {
             return (
               <div
@@ -362,11 +593,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                       Coming Soon
                     </h1>
                     <p className="text-gray-400 text-sm">
-                      We’re working on something amazing. Stay tuned!
+                      We're working on something amazing. Stay tuned!
                     </p>
                   </div>
                   <div className='flex flex-col items-center gap-3'>
-
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
@@ -376,7 +606,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                         className="sr-only peer"
                       />
                       <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer ${model.selected ? 'peer-checked:bg-blue-600' : ''} peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all`}>
-
                       </div>
                     </label>
                     <button
@@ -389,10 +618,9 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                   </div>
                 </div>
               </div>
-
             );
           } else {
-            return null
+            return null;
           }
         })}
       </div>
@@ -400,11 +628,22 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   );
 };
 
-// Input Area Component - Updated for mobile
-const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendMessage, isLoading, selectedModels, suggestedQuestions, onUseExample }) => {
+const InputArea: React.FC<InputAreaProps> = ({
+  message,
+  onMessageChange,
+  onSendMessage,
+  isLoading,
+  selectedModels,
+  suggestedQuestions,
+  onUseExample,
+  onQuickAction,
+  showTools,
+  onToggleTools
+}) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -415,6 +654,7 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
   useEffect(() => {
     adjustTextareaHeight();
   }, [message]);
+
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
@@ -428,8 +668,7 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
           .map((result: any) => result[0])
           .map(result => result.transcript)
           .join('');
-        // setMessage(transcript);
-        onMessageChange(transcript)
+        onMessageChange(transcript);
       };
 
       recognition.onend = () => {
@@ -455,12 +694,14 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
     }
     setIsRecording(!isRecording);
   };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
       e.preventDefault();
       onSendMessage();
     }
   };
+
   const getPlaceholder = () => {
     if (selectedModels.length === 0) {
       return "Select models to get started...";
@@ -468,8 +709,71 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
     return `Ask ${selectedModels.length} models anything...`;
   };
 
+  // Group quick actions by category
+  const groupedQuickActions = quickActions.reduce((groups, action) => {
+    if (!groups[action.category]) {
+      groups[action.category] = [];
+    }
+    groups[action.category].push(action);
+    return groups;
+  }, {} as Record<string, QuickAction[]>);
+
   return (
-    <div className="border-t border-gray-700 p-3 sm:p-4">
+    <div className="border-t border-gray-700">
+      {showTools && (
+        <div className="max-w-6xl mx-auto p-4 bg-gray-800">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-white flex items-center">
+              <Sparkles className="w-5 h-5 mr-2" />
+              Daily Life Tools
+            </h3>
+            <button
+              onClick={onToggleTools}
+              className="text-gray-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+            {dailyTools.map((tool) => (
+              <button
+                key={tool.id}
+                onClick={() => onQuickAction(tool.prompt)}
+                className="flex flex-col items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
+                title={tool.description}
+              >
+                <div className="text-blue-400 mb-2">{tool.icon}</div>
+                <span className="text-xs text-white font-medium text-center">{tool.name}</span>
+                <span className="text-xs text-gray-400 mt-1 text-center">{tool.description}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-6">
+            <h4 className="text-sm font-semibold text-gray-300 mb-3">Quick Actions</h4>
+
+            {Object.entries(groupedQuickActions).map(([category, actions]) => (
+              <div key={category} className="mb-4">
+                <h5 className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{category}</h5>
+                <div className="flex overflow-x-auto space-x-2 pb-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+                  {actions.map((action) => (
+                    <button
+                      key={action.id}
+                      onClick={() => onQuickAction(action.prompt)}
+                      className="flex items-center space-x-2 flex-shrink-0 bg-gray-700 hover:bg-gray-600 text-xs text-gray-200 px-3 py-2 rounded-lg transition-colors"
+                      title={action.prompt}
+                    >
+                      <span className="text-blue-400">{action.icon}</span>
+                      <span>{action.title}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {suggestedQuestions.length > 0 && (
         <div className="max-w-6xl mx-auto px-4 py-2">
           <div className="flex items-center justify-between mb-2">
@@ -501,6 +805,7 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
           )}
         </div>
       )}
+
       <div className="max-w-6xl mx-auto p-3">
         <div className="relative bg-gray-750 border border-gray-600 rounded-xl focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
           <textarea
@@ -547,21 +852,19 @@ const InputArea: React.FC<InputAreaProps> = ({ message, onMessageChange, onSendM
     </div>
   );
 };
-
-// Main App Component
 const modelsComponent = [
   {
-    id: 'chatgpt',
-    name: 'OpenAI GPT-3.5',
-    color: 'bg-emerald-500',
+    id: 'gemini',
+    name: 'Gemini 1.5 Flash',
+    color: 'bg-blue-500',
     enabled: true,
     selected: true,
     isExpend: true
   },
   {
-    id: 'gemini',
-    name: 'Gemini 1.5 Flash',
-    color: 'bg-blue-500',
+    id: 'chatgpt',
+    name: 'OpenAI GPT-3.5',
+    color: 'bg-emerald-500',
     enabled: true,
     selected: false,
     isExpend: false
@@ -581,25 +884,20 @@ const modelsComponent = [
     enabled: true,
     selected: false,
     isExpend: false
-  },
-  {
-    id: 'test',
-    name: 'test',
-    color: 'bg-orange-500',
-    enabled: false,
-    selected: true,
-    isExpend: true
   }
-]
+];
 
 const exampleQuestions = [
+  "Daily Life Tools",
   "Explain quantum computing in simple terms",
   "How to learn React quickly?",
   "What are the best practices for API design?",
   "Write a poem about artificial intelligence",
   "Compare Next.js and Remix frameworks"
 ];
+
 const ONE_HOUR = 60 * 60 * 1000;
+
 const AI: React.FC = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem('token') ?? "";
@@ -609,6 +907,8 @@ const AI: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [models, setModels] = useState<AIModel[]>(modelsComponent);
   const [collapsedModels, setCollapsedModels] = useState<string[]>([]);
+  const [showTools, setShowTools] = useState(false);
+  const [, setBookmarkedMessages] = useState<Set<string>>(new Set());
 
   const apiService = createApiClient(token);
   const selectedModels = models;
@@ -638,7 +938,6 @@ const AI: React.FC = () => {
       });
     });
   };
-
 
   const handleToggleCollapse = (modelId: string, expand: boolean) => {
     setModels((prev) => {
@@ -688,12 +987,12 @@ const AI: React.FC = () => {
     });
   };
 
-
   const handleSendMessage = async () => {
     if (!message.trim() || isLoading || selectedModels.length === 0) return;
     const currentMessage = message;
     setMessage('');
     setIsLoading(true);
+
     if (selectedModels.length >= 1) {
       const multiResponseId = generateId();
       const userMessage: Message[] = selectedModels.filter((model) => model.enabled && model.selected).map(model => ({
@@ -707,6 +1006,7 @@ const AI: React.FC = () => {
       setMessages(prev => {
         return [...prev, ...userMessage]
       });
+
       const multiResponseMessage: Message = {
         id: multiResponseId,
         content: '',
@@ -750,6 +1050,7 @@ const AI: React.FC = () => {
     }
     setIsLoading(false);
   };
+
   const [isOpen, setIsOpen] = useState(false);
   const handleNewChat = () => {
     setMessages([]);
@@ -758,11 +1059,17 @@ const AI: React.FC = () => {
   };
 
   const handleUseExample = (example: string) => {
+    if (example === "Daily Life Tools") {
+      setShowTools(true)
+      return
+    }
     setMessage(example);
   };
+
   const handleCopyMessage = (content: string) => {
     navigator.clipboard.writeText(content);
   };
+
   const handleEditMessage = (messageId: string, newContent: string) => {
     setMessages(prev =>
       prev.map(msg =>
@@ -773,7 +1080,7 @@ const AI: React.FC = () => {
 
   const handleRateResponse = (messageId: string, modelId: string, rating: boolean) => {
     console.log(`Rated message ${messageId} from model ${modelId} as ${rating ? 'good' : 'bad'}`);
-  }
+  };
 
   const handleRegenerateResponse = async (messageId: string) => {
     const responseMessage = messages.find(m => m.id === messageId);
@@ -843,12 +1150,12 @@ const AI: React.FC = () => {
 
     setIsLoading(false);
   };
+
   const [showDonation, setShowDonation] = useState(false);
   const [readingMessageId, setReadingMessageId] = useState<string | null>(null);
   const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const handleReadAloud = (messageId: string, content: string) => {
-    // Stop any ongoing speech
     handleStopReading();
 
     if ('speechSynthesis' in window) {
@@ -879,6 +1186,61 @@ const AI: React.FC = () => {
       speechSynthesisRef.current = null;
     }
   };
+
+  const handleBookmarkMessage = (messageId: string) => {
+    setBookmarkedMessages(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(messageId)) {
+        newSet.delete(messageId);
+      } else {
+        newSet.add(messageId);
+      }
+      return newSet;
+    });
+
+    setMessages(prev =>
+      prev.map(msg =>
+        msg.id === messageId ? { ...msg, bookmarked: !msg.bookmarked } : msg
+      )
+    );
+  };
+
+  const handleShareMessage = (content: string) => {
+    if (navigator.share) {
+      navigator.share({
+        title: 'AI Response',
+        text: content,
+        url: window.location.href
+      }).catch(() => {
+        navigator.clipboard.writeText(content);
+        alert('Content copied to clipboard!');
+      });
+    } else {
+      navigator.clipboard.writeText(content);
+      alert('Content copied to clipboard!');
+    }
+  };
+
+  const handleExportMessage = (content: string, format: string) => {
+    if (format === 'text') {
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ai-response.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (format === 'pdf') {
+      alert('PDF export would be implemented with a PDF generation library');
+      // This would typically use a library like jsPDF
+    }
+  };
+
+  const handleQuickAction = (prompt: string) => {
+    setMessage(prompt);
+    setShowTools(false);
+  };
+
   useEffect(() => {
     const lastClosed = localStorage.getItem('lastDonationClosed');
     const now = Date.now();
@@ -900,9 +1262,10 @@ const AI: React.FC = () => {
       if (window.speechSynthesis.speaking) {
         window.speechSynthesis.cancel();
       }
-      clearInterval(timer)
+      clearInterval(timer);
     };
   }, []);
+
   const handleClose = () => {
     setShowDonation(false);
     localStorage.setItem('lastDonationClosed', Date.now().toString());
@@ -966,7 +1329,14 @@ const AI: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <Routes>
           <Route path="/ai-app" element={<>
-            <TopBar models={[]} onModelToggleSelect={handleToggleModelActive} onToggleModel={() => { }} onMenuClick={() => setIsOpen(true)} />
+            <TopBar
+              models={[]}
+              onModelToggleSelect={handleToggleModelActive}
+              onToggleModel={() => { }}
+              onMenuClick={() => setIsOpen(true)}
+              onToggleTools={() => setShowTools(!showTools)}
+              showTools={showTools}
+            />
             <ChatArea
               messages={messages}
               isLoading={isLoading}
@@ -982,7 +1352,9 @@ const AI: React.FC = () => {
               readingMessageId={readingMessageId || undefined}
               onReadAloud={handleReadAloud}
               onStopReading={handleStopReading}
-
+              onBookmarkMessage={handleBookmarkMessage}
+              onShareMessage={handleShareMessage}
+              onExportMessage={handleExportMessage}
             />
             <InputArea
               message={message}
@@ -992,7 +1364,11 @@ const AI: React.FC = () => {
               selectedModels={selectedModels.filter((model) => model.enabled && model.selected)}
               onUseExample={handleUseExample}
               suggestedQuestions={exampleQuestions}
-            /></>}
+              onQuickAction={handleQuickAction}
+              showTools={showTools}
+              onToggleTools={() => setShowTools(!showTools)}
+            />
+          </>}
           />
         </Routes>
       </div>

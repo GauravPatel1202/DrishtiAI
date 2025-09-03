@@ -10,10 +10,11 @@ export interface AIModel {
 export interface Message {
   id: string;
   content: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   timestamp: Date;
   model?: string;
   isMultiResponse?: boolean;
+  bookmarked?: boolean;
   responses?: ModelResponse[];
 }
 
