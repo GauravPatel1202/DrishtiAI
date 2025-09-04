@@ -78,9 +78,27 @@ import {
   Smartphone,
   Code,
   Cpu,
-
-
-
+  Atom,
+  Bug,
+  BarChart,
+  MessageSquare,
+  GitBranch,
+  Layers,
+  Gamepad2,
+  Server,
+  Network,
+  View,
+  Scale,
+  Settings,
+  Layout,
+  Code2,
+  Brain,
+  BarChart4,
+  Database,
+  Shield,
+  Cloud,
+  Wifi,
+  Link,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
@@ -630,8 +648,250 @@ const dailyTools: DailyTool[] = [
     description: 'Event planning',
     prompt: 'Help me plan a memorable birthday party for a 10-year-old with a science theme',
     category: 'entertainment'
+  },
+  {
+    id: 'quantum-computing',
+    name: 'Quantum Computing',
+    icon: <Atom className="w-5 h-5" />,
+    description: 'Next-generation computing using quantum mechanics',
+    prompt: 'Explain the difference between classical bits and qubits.',
+    category: 'technology'
+  },
+  // {
+  //   id: 'augmented-reality',
+  //   name: 'Augmented Reality (AR)',
+  //   icon: <AugmentedReality className="w-5 h-5" />,
+  //   description: 'Overlaying digital content onto the real world',
+  //   prompt: 'What are the common use cases of AR in mobile applications?',
+  //   category: 'technology'
+  // },
+  {
+    id: 'ethical-hacking',
+    name: 'Ethical Hacking',
+    icon: <Bug className="w-5 h-5" />,
+    description: 'Testing systems for vulnerabilities legally',
+    prompt: 'What is penetration testing and why is it important?',
+    category: 'technology'
+  },
+  {
+    id: 'big-data',
+    name: 'Big Data',
+    icon: <BarChart className="w-5 h-5" />,
+    description: 'Managing and analyzing massive data sets',
+    prompt: 'Describe the 5 V’s of Big Data and their significance.',
+    category: 'technology'
+  },
+  {
+    id: 'natural-language-processing',
+    name: 'Natural Language Processing (NLP)',
+    icon: <MessageSquare className="w-5 h-5" />,
+    description: 'Teaching machines to understand human language',
+    prompt: 'How do sentiment analysis and text classification work?',
+    category: 'technology'
+  },
+  // {
+  //   id: 'system-design',
+  //   name: 'System Design',
+  //   icon: <Sitemap className="w-5 h-5" />,
+  //   description: 'Designing scalable and maintainable software systems',
+  //   prompt: 'Design a URL shortening service like Bitly.',
+  //   category: 'technology'
+  // },
+  {
+    id: 'version-control',
+    name: 'Version Control (Git)',
+    icon: <GitBranch className="w-5 h-5" />,
+    description: 'Tracking and managing changes to code',
+    prompt: 'Explain how branching and merging works in Git.',
+    category: 'technology'
+  },
+  {
+    id: 'virtualization',
+    name: 'Virtualization',
+    icon: <Layers className="w-5 h-5" />,
+    description: 'Running multiple OS environments on a single machine',
+    prompt: 'What is a hypervisor and how is it used in virtualization?',
+    category: 'technology'
+  },
+  // {
+  //   id: 'embedded-systems',
+  //   name: 'Embedded Systems',
+  //   icon: <Chip className="w-5 h-5" />,
+  //   description: 'Programming small devices and controllers',
+  //   prompt: 'Describe how microcontrollers are used in IoT devices.',
+  //   category: 'technology'
+  // },
+  {
+    id: 'digital-forensics',
+    name: 'Digital Forensics',
+    icon: <Search className="w-5 h-5" />,
+    description: 'Recovering and analyzing digital evidence',
+    prompt: 'What are the main phases of a digital forensic investigation?',
+    category: 'technology'
+  },
+  {
+    id: 'devops',
+    name: 'DevOps',
+    icon: <Settings className="w-5 h-5" />,
+    description: 'Bridging development and operations',
+    prompt: 'Explain the CI/CD pipeline and its importance in DevOps.',
+    category: 'technology'
+  },
+  {
+    id: 'ui-ux-design',
+    name: 'UI/UX Design',
+    icon: <Layout className="w-5 h-5" />,
+    description: 'User interface and experience design',
+    prompt: 'What are the key principles of good UI/UX design?',
+    category: 'technology'
+  },
+  {
+    id: 'robotics',
+    name: 'Robotics',
+    icon: <Bot className="w-5 h-5" />,
+    description: 'Designing and programming intelligent machines',
+    prompt: 'Describe how sensors and actuators work in a basic robot.',
+    category: 'technology'
+  },
+  {
+    id: 'mobile-development',
+    name: 'Mobile App Development',
+    icon: <Smartphone className="w-5 h-5" />,
+    description: 'Building applications for iOS and Android',
+    prompt: 'Compare native vs cross-platform mobile development.',
+    category: 'technology'
+  },
+  {
+    id: 'game-development',
+    name: 'Game Development',
+    icon: <Gamepad2 className="w-5 h-5" />,
+    description: 'Creating interactive digital games',
+    prompt: 'What are the main stages of game development using Unity?',
+    category: 'technology'
+  },
+  {
+    id: 'database-systems',
+    name: 'Database Systems',
+    icon: <Server className="w-5 h-5" />,
+    description: 'Designing and managing data storage systems',
+    prompt: 'Explain normalization and its types in relational databases.',
+    category: 'technology'
+  },
+  {
+    id: 'networking',
+    name: 'Computer Networking',
+    icon: <Network className="w-5 h-5" />,
+    description: 'Connecting computers and managing data transmission',
+    prompt: 'What is the OSI model and how does it work?',
+    category: 'technology'
+  },
+  {
+    id: 'programming-languages',
+    name: 'Programming Languages',
+    icon: <Code className="w-5 h-5" />,
+    description: 'Syntax and paradigms of modern programming languages',
+    prompt: 'Compare Python, Java, and JavaScript in terms of use cases.',
+    category: 'technology'
+  },
+  {
+    id: 'virtual-reality',
+    name: 'Virtual Reality',
+    icon: <View className="w-5 h-5" />,
+    description: 'Immersive virtual environments',
+    prompt: 'What hardware and software are needed to build a VR app?',
+    category: 'technology'
+  },
+  {
+    id: 'technology-ethics',
+    name: 'Technology Ethics',
+    icon: <Scale className="w-5 h-5" />,
+    description: 'Ethical considerations in modern tech',
+    prompt: 'Discuss the ethical concerns related to AI surveillance.',
+    category: 'technology'
+  },
+  {
+    id: 'computer-science',
+    name: 'Computer Science',
+    icon: <Cpu className="w-5 h-5" />,
+    description: 'Core concepts of computing and algorithms',
+    prompt: 'Explain the concept of time and space complexity with examples.',
+    category: 'technology'
+  },
+  {
+    id: 'software-engineering',
+    name: 'Software Engineering',
+    icon: <Code2 className="w-5 h-5" />,
+    description: 'Software design, development, and testing',
+    prompt: 'Describe the software development life cycle (SDLC).',
+    category: 'technology'
+  },
+  {
+    id: 'artificial-intelligence',
+    name: 'Artificial Intelligence',
+    icon: <Brain className="w-5 h-5" />,
+    description: 'AI concepts, algorithms, and applications',
+    prompt: 'What are the main types of AI and their use cases?',
+    category: 'technology'
+  },
+  {
+    id: 'machine-learning',
+    name: 'Machine Learning',
+    icon: <BarChart4 className="w-5 h-5" />,
+    description: 'ML models and training techniques',
+    prompt: 'Explain supervised vs unsupervised learning with examples.',
+    category: 'technology'
+  },
+  {
+    id: 'data-science',
+    name: 'Data Science',
+    icon: <Database className="w-5 h-5" />,
+    description: 'Analyzing and interpreting complex data',
+    prompt: 'How do you clean and preprocess data in a data science project?',
+    category: 'technology'
+  },
+  {
+    id: 'cybersecurity',
+    name: 'Cybersecurity',
+    icon: <Shield className="w-5 h-5" />,
+    description: 'Protecting systems and data from cyber threats',
+    prompt: 'List common types of cyberattacks and how to prevent them.',
+    category: 'technology'
+  },
+  {
+    id: 'blockchain',
+    name: 'Blockchain Technology',
+    icon: <Link className="w-5 h-5" />,
+    description: 'Decentralized ledgers and smart contracts',
+    prompt: 'How does blockchain ensure security and transparency?',
+    category: 'technology'
+  },
+  {
+    id: 'cloud-computing',
+    name: 'Cloud Computing',
+    icon: <Cloud className="w-5 h-5" />,
+    description: 'Cloud infrastructure and services',
+    prompt: 'Compare IaaS, PaaS, and SaaS with examples.',
+    category: 'technology'
+  },
+  {
+    id: 'iot',
+    name: 'Internet of Things',
+    icon: <Wifi className="w-5 h-5" />,
+    description: 'Smart devices and their networks',
+    prompt: 'Explain how IoT works and give three real-world applications.',
+    category: 'technology'
+  },
+  {
+    id: 'web-development',
+    name: 'Web Development',
+    icon: <Globe className="w-5 h-5" />,
+    description: 'Front-end and back-end web technologies',
+    prompt: 'Build a simple responsive web page using HTML and CSS.',
+    category: 'technology'
   }
 ];
+
+
 
 // Quick actions for daily life
 const quickActions: QuickAction[] = [
