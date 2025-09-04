@@ -82,6 +82,7 @@ import {
 
 
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 import { exampleQuestions, modelsComponent, type AIModel, type Message } from '../lib/type';
 import { Logo } from '../components/logo';
@@ -800,7 +801,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                     <span className="text-sm">Thinking...</span>
                   </div>
                 ) : (
-                    <p className="text-gray-100 text-sm whitespace-pre-wrap break-all">{response.content}</p>
+                    <p className="text-gray-100 text-sm whitespace-pre-wrap break-all">
+                      <ReactMarkdown children={response.content} />
+                    </p>
               )}
             </div>
           ))}
@@ -808,7 +811,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       </div>
     );
   }
-
   if (message.model === model) {
     return (
       <div className={`flex items-start space-x-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4 group`}>
