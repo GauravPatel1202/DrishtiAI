@@ -8,6 +8,7 @@ import Login from './modules/login/login';
 import Register from './modules/register/register';
 import { AuthProvider, ProtectedRoute } from './AuthContext';
 import AIFiestaClone from './ai';
+import AuthSuccess from './components/AuthSuccess';
 
 const App: React.FC = () => {
   const locale = 'en';
@@ -25,6 +26,7 @@ const App: React.FC = () => {
                 <AIFiestaClone />
               </ProtectedRoute>
             } />
+            <Route path="/auth/success" element={<AuthSuccess />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

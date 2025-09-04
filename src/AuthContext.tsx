@@ -21,23 +21,45 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const token = localStorage.getItem('token') ?? "";
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const apiClient = createApiClient(token)
-
 
   useEffect(() => {
-    // Check if user is logged in on app load
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+      
+      if (token && savedUser) {
+        setUser(JSON.parse(savedUser));
+      } else if (token) {
+        // If we have a token but no user data, try to fetch user profile
+        try {
+          const apiClient = createApiClient(token);
+          const response = await apiClient.getProfile();
+          if (response.ok) {
+            const data = await response.json();
+            setUser(data.user);
+            localStorage.setItem('user', JSON.stringify(data.user));
+          } else {
+            // Token might be invalid, clear it
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      }
+      setLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      const apiClient = createApiClient(''); // No token for login
       const response = await apiClient.login(email, password);
       if (response.ok) {
         const data = await response.json();
@@ -61,6 +83,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const register = async (name: string, email: string, password: string): Promise<boolean> => {
     try {
+      const apiClient = createApiClient(''); // No token for register
       const response = await apiClient.register(name, email, password);
       if (response.ok) {
         return true;
@@ -75,15 +98,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = async () => {
-
-    await apiClient.logout(token).then(() => {
+    const token = localStorage.getItem('token') || '';
+    const apiClient = createApiClient(token);
+    
+    try {
+      await apiClient.logout(token);
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
       setUser(null);
       localStorage.removeItem('user');
       localStorage.removeItem('token');
-    }).catch((error) => {
-      console.error('Logout error:', error);
-    });
+    }
   };
+
   return (
     <AuthContext.Provider
       value={{ user, login, register, logout, loading }}>
