@@ -1,7 +1,14 @@
 // Register.tsx
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../AuthContext';
+import { GOOGLE_CLIENT_ID } from '../../lib/config';
+
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 const Register: React.FC = () => {
   const [name, setName] = useState('');
@@ -10,38 +17,48 @@ const Register: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { register, user } = useAuth();
+  const { register, user, googleLogin } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   // Redirect if already authenticated
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      navigate('/app/ai-app');
     }
   }, [user, navigate]);
 
-  // Handle Google OAuth success callback
   useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const token = urlParams.get('token');
-    
-    if (token) {
-      // Store the token and refresh user data
-      localStorage.setItem('token', token);
-      // The AuthContext will handle updating the user state
-      navigate('/dashboard');
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleCredentialResponse,
+    });
+  }, []);
+
+  const handleCredentialResponse = async (response: any) => {
+    try {
+      const success = await googleLogin(response.credential);
+      if (success) {
+        navigate('/app/ai-app');
+      } else {
+        setError('Google login failed');
+      }
+    } catch (error) {
+      setError('Google login error');
     }
-  }, [location, navigate]);
+  };
+
+  const handleGoogleLogin = () => {
+    window.google.accounts.id.prompt();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     if (password !== confirmPassword) {
       return setError('Passwords do not match');
     }
-    
+
     setLoading(true);
     const success = await register(name, email, password);
     if (success) {
@@ -52,18 +69,13 @@ const Register: React.FC = () => {
     setLoading(false);
   };
 
-  const handleGoogleLogin = () => {
-    // Redirect to backend Google OAuth route
-    window.location.href = 'http://localhost:3001/api/auth/google';
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md mx-auto p-6 bg-card rounded-lg shadow-lg border border-gray-700 w-full">
         <h2 className="text-2xl font-bold text-center text-text mb-6">Create Account</h2>
-        
+
         {error && <div className="text-red-500 text-center mb-4">{error}</div>}
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-text-dim mb-2 text-sm font-medium" htmlFor="name">
@@ -79,7 +91,7 @@ const Register: React.FC = () => {
               required
             />
           </div>
-          
+
           <div>
             <label className="block text-text-dim mb-2 text-sm font-medium" htmlFor="email">
               Email Address
@@ -94,7 +106,7 @@ const Register: React.FC = () => {
               required
             />
           </div>
-          
+
           <div>
             <label className="block text-text-dim mb-2 text-sm font-medium" htmlFor="password">
               Password
@@ -124,7 +136,7 @@ const Register: React.FC = () => {
               required
             />
           </div>
-          
+
           <div className="flex justify-center">
             <button
               type="submit"

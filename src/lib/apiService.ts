@@ -8,10 +8,12 @@ const providerMapping: { [key: string]: string } = {
   perplexity: "mistral",
 };
 export interface WACApiClient {
+  getProfile(): Promise<Response>;
   sendQuery(query: string, model: string[]): Promise<ApiResponse>;
-  login(email: string, password: string): Promise<any>;
-  register(name: string, email: string, password: string): Promise<any>;
-  logout(token: string): Promise<any>;
+  login(email: string, password: string): Promise<Response>;
+  register(name: string, email: string, password: string): Promise<Response>;
+  logout(token: string): Promise<Response>;
+  googleLogin(idToken: string): Promise<Response>;
 }
 
 export const PATHS = Object.freeze({
@@ -19,6 +21,8 @@ export const PATHS = Object.freeze({
   LOGIN: () => `/api/auth/login`,
   REGISTER: () => `/api/auth/register`,
   LOGOUT: () => `/api/auth/logout`,
+  GOOGLE_LOGIN: () => `/api/auth/google-login`,
+  GET_PROFILE: () => `/api/auth/profile`,
 });
 
 export const createApiClient = (token: any): WACApiClient => {
@@ -48,7 +52,7 @@ export const createApiClient = (token: any): WACApiClient => {
     return responses;
   };
 
-  const login = async (email: string, password: string): Promise<any> => {
+  const login = async (email: string, password: string): Promise<Response> => {
     return await fetch(`${BASE_URL}${PATHS.LOGIN()}`, {
       method: "POST",
       headers: {
@@ -62,7 +66,7 @@ export const createApiClient = (token: any): WACApiClient => {
     name: string,
     email: string,
     password: string
-  ): Promise<any> => {
+  ): Promise<Response> => {
     return await fetch(`${BASE_URL}${PATHS.REGISTER()}`, {
       method: "POST",
       headers: {
@@ -72,7 +76,7 @@ export const createApiClient = (token: any): WACApiClient => {
     });
   };
 
-  const logout = async (token: any) => {
+  const logout = async (token: any): Promise<Response> => {
     return await fetch(`${BASE_URL}${PATHS.LOGOUT()}`, {
       method: "POST",
       headers: {
@@ -81,10 +85,33 @@ export const createApiClient = (token: any): WACApiClient => {
       },
     });
   };
+
+  const googleLogin = async (idToken: string): Promise<Response> => {
+    return await fetch(`${BASE_URL}${PATHS.GOOGLE_LOGIN()}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ idToken }),
+    });
+  };
+
+  const getProfile = async (): Promise<Response> => {
+    return await fetch(`${BASE_URL}${PATHS.GET_PROFILE()}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+  };
+
   return {
     sendQuery,
     login,
     register,
     logout,
+    googleLogin,
+    getProfile,
   };
 };

@@ -1,14 +1,21 @@
 // Login.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../AuthContext';
+import { GOOGLE_CLIENT_ID } from '../../lib/config';
+
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,8 +32,41 @@ const Login: React.FC = () => {
     setLoading(false);
   };
 
-  const handleGoogleLogin = () => {
+  useEffect(() => {
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleCredentialResponse,
+    });
+  }, []);
 
+  const handleGoogleLogin = () => {
+    window.google.accounts.id.prompt();
+  };
+
+  const handleCredentialResponse = async (response: any) => {
+    try {
+      const userObject = parseJwt(response.credential);
+      const success = await googleLogin(response.credential);
+      if (success) {
+        navigate('/app/ai-app');
+      } else {
+        setError('Google login failed');
+      }
+    } catch (error) {
+      setError('Google login error');
+    }
+  };
+
+  const parseJwt = (token: string) => {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
   };
 
   return (
