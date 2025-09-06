@@ -33,19 +33,27 @@ const Login: React.FC = () => {
   };
 
   useEffect(() => {
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleCredentialResponse,
-    });
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse,
+        // Force popup mode instead of FedCM
+        ux_mode: 'popup',
+        context: 'signin'
+      });
+    }
   }, []);
 
   const handleGoogleLogin = () => {
-    window.google.accounts.id.prompt();
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      window.google.accounts.id.prompt();
+    } else {
+      console.error('Google Sign-In library not loaded');
+    }
   };
 
   const handleCredentialResponse = async (response: any) => {
     try {
-      const userObject = parseJwt(response.credential);
       const success = await googleLogin(response.credential);
       if (success) {
         navigate('/app/ai-app');
@@ -57,17 +65,7 @@ const Login: React.FC = () => {
     }
   };
 
-  const parseJwt = (token: string) => {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    return JSON.parse(jsonPayload);
-  };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">

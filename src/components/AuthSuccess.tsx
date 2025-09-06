@@ -1,12 +1,12 @@
 // AuthSuccess.tsx
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../AuthContext';
+
 
 const AuthSuccess: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);

@@ -28,10 +28,15 @@ const Register: React.FC = () => {
   }, [user, navigate]);
 
   useEffect(() => {
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleCredentialResponse,
-    });
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse,
+        // Force popup mode instead of FedCM
+        ux_mode: 'popup',
+        context: 'signup'
+      });
+    }
   }, []);
 
   const handleCredentialResponse = async (response: any) => {
@@ -48,7 +53,11 @@ const Register: React.FC = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.google.accounts.id.prompt();
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      window.google.accounts.id.prompt();
+    } else {
+      console.error('Google Sign-In library not loaded');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
